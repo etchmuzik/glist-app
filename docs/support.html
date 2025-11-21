@@ -38,136 +38,193 @@
             font-size: 14px;
         }
 
-        ul {
-            list-style-type: square;
-        }
-
-        a {
-            color: #3030F1;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .contact-box {
-            background: #f5f5f5;
+        body {
+            font-family: -apple-system, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
+            color: #333;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .answer {
+            color: #555;
         }
     </style>
 </head>
 
 <body>
-    <h1>Glist Support</h1>
-    <p>Welcome to Glist support! We're here to help you make the most of Dubai's premier nightlife app.</p>
+    <h1>LSTD Support</h1>
+    <p>Welcome to LSTD support! We're here to help you make the most of Dubai's premier nightlife app.</p>
 
-    <div class="contact-box">
-        <h2>Contact Us</h2>
-        <p><strong>Email:</strong> <a href="mailto:support@glist.app">support@glist.app</a></p>
-        <p><strong>Response Time:</strong> Within 24 hours</p>
-        <p><strong>Business Hours:</strong> Sunday - Thursday, 9 AM - 6 PM GST</p>
-    </div>
+    <h2>Contact Us</h2>
+    <p>
+        <strong>Email:</strong> <a href="mailto:support@glist.app">support@glist.app</a><br>
+        <strong>Response Time:</strong> Within 24 hours<br>
+        <strong>Business Hours:</strong> Sunday - Thursday, 9 AM - 6 PM GST
+    </p>
 
     <h2>Frequently Asked Questions</h2>
 
     <h3>Getting Started</h3>
-    <p><strong>Q: How do I create an account?</strong></p>
-    <p>A: Download the Glist app from the App Store, tap "Sign Up", and follow the prompts. You can sign up with email,
-        Google, or Apple.</p>
-
-    <p><strong>Q: Is Glist free to use?</strong></p>
-    <p>A: Yes! Glist is free to download and use. We offer optional VIP and Member subscriptions for exclusive benefits.
-    </p>
+    <div class="faq-item">
+        <div class="question">Q: How do I create an account?</div>
+        <div class="answer">A: Download the LSTD app from the App Store, tap "Sign Up", and follow the prompts. You can
+            sign up with email, Google, or Apple.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: Is LSTD free to use?</div>
+        <div class="answer">A: Yes! LSTD is free to download and use. We offer optional VIP and Member subscriptions for
+            exclusive benefits.</div>
+    </div>
 
     <h3>Guest Lists</h3>
-    <p><strong>Q: How do I join a guest list?</strong></p>
-    <p>A: Browse venues, select an event, tap "Join Guest List", fill in your details, and submit. You'll receive a QR
-        code once approved.</p>
-
-    <p><strong>Q: How do I know if I'm approved?</strong></p>
-    <p>A: You'll receive a notification when your guest list request is approved. Check "My Guest Lists" in your
-        profile.</p>
-
-    <p><strong>Q: Can I bring guests?</strong></p>
-    <p>A: Yes, specify the number of guests when joining the list. All guests must be 21+.</p>
+    <div class="faq-item">
+        <div class="question">Q: How do I join a guest list?</div>
+        <div class="answer">A: Browse venues, select an event, tap "Join Guest List", fill in your details, and submit.
+            You'll receive a QR code once approved.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: How do I know if I'm approved?</div>
+        <div class="answer">A: You'll receive a notification when your guest list request is approved. Check "My Guest
+            Lists" in your profile.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: Can I bring guests?</div>
+        <div class="answer">A: Yes, specify the number of guests when joining the list. All guests must be 21+.</div>
+    </div>
 
     <h3>Table Bookings</h3>
-    <p><strong>Q: How do table bookings work?</strong></p>
-    <p>A: Select a venue, tap "Book a Table", choose your date and table, then complete checkout. Some tables require a
-        deposit.</p>
-
-    <p><strong>Q: What is a minimum spend?</strong></p>
-    <p>A: The minimum amount you must spend on food and drinks at the venue. This varies by table and venue.</p>
-
-    <p><strong>Q: How do I cancel a booking?</strong></p>
-    <p>A: Contact the venue directly or email support@glist.app. Cancellation policies vary by venue.</p>
+    <div class="faq-item">
+        <div class="question">Q: How do table bookings work?</div>
+        <div class="answer">A: Select a venue, tap "Book a Table", choose your date and table, then complete checkout.
+            Some tables require a deposit.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: What is a minimum spend?</div>
+        <div class="answer">A: The minimum amount you must spend on food and drinks at the venue. This varies by table
+            and venue.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: How do I cancel a booking?</div>
+        <div class="answer">A: Contact the venue directly or email <a
+                href="mailto:support@glist.app">support@glist.app</a>. Cancellation policies vary by venue.</div>
+    </div>
 
     <h3>Event Tickets</h3>
-    <p><strong>Q: How do I buy tickets?</strong></p>
-    <p>A: Browse events, select ticket type, choose quantity, and complete checkout. Your QR code ticket will appear in
-        "My Tickets".</p>
-
-    <p><strong>Q: Can I get a refund?</strong></p>
-    <p>A: Ticket sales are final. Refunds are only available in exceptional circumstances and subject to venue policies.
-    </p>
+    <div class="faq-item">
+        <div class="question">Q: How do I buy tickets?</div>
+        <div class="answer">A: Browse events, select ticket type, choose quantity, and complete checkout. Your QR code
+            ticket will appear in "My Tickets".</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: Can I get a refund?</div>
+        <div class="answer">A: Ticket sales are final. Refunds are only available in exceptional circumstances and
+            subject to venue policies.</div>
+    </div>
 
     <h3>Social Features</h3>
-    <p><strong>Q: How do I find friends?</strong></p>
-    <p>A: Tap the "Find Friends" button in your profile, search by name or username, and tap "Follow".</p>
-
-    <p><strong>Q: How does "Who's Going" work?</strong></p>
-    <p>A: When viewing a venue, you'll see which of your friends have bookings or are on the guest list for that venue.
-    </p>
+    <div class="faq-item">
+        <div class="question">Q: How do I find friends?</div>
+        <div class="answer">A: Tap the "Find Friends" button in your profile, search by name or username, and tap
+            "Follow".</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: How does "Who's Going" work?</div>
+        <div class="answer">A: When viewing a venue, you'll see which of your friends have bookings or are on the guest
+            list for that venue.</div>
+    </div>
 
     <h3>VIP & Member Tiers</h3>
-    <p><strong>Q: What are the benefits of VIP?</strong></p>
-    <p>A: VIP members get priority guest list access, exclusive event invites, special promotions, and premium support.
-    </p>
-
-    <p><strong>Q: How do I upgrade?</strong></p>
-    <p>A: Tap your tier badge in your profile, select VIP or Member, and complete the subscription.</p>
-
-    <p><strong>Q: Can I cancel my subscription?</strong></p>
-    <p>A: Yes, anytime through your account settings. You'll retain benefits until the end of your billing period.</p>
+    <div class="faq-item">
+        <div class="question">Q: What are the benefits of VIP?</div>
+        <div class="answer">A: VIP members get priority guest list access, exclusive event invites, special promotions,
+            and premium support.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: How do I upgrade?</div>
+        <div class="answer">A: Tap your tier badge in your profile, select VIP or Member, and complete the subscription.
+        </div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: Can I cancel my subscription?</div>
+        <div class="answer">A: Yes, anytime through your account settings. You'll retain benefits until the end of your
+            billing period.</div>
+    </div>
 
     <h3>Map & Location</h3>
-    <p><strong>Q: Why does Glist need my location?</strong></p>
-    <p>A: To show you nearby venues and display your location on the map. You can disable this in settings.</p>
-
-    <p><strong>Q: What is the heatmap?</strong></p>
-    <p>A: Venues with more activity (friends, bookings) appear "hotter" on the map, helping you find popular spots.</p>
+    <div class="faq-item">
+        <div class="question">Q: Why does LSTD need my location?</div>
+        <div class="answer">A: To show you nearby venues and display your location on the map. You can disable this in
+            settings.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: What is the heatmap?</div>
+        <div class="answer">A: Venues with more activity (friends, bookings) appear "hotter" on the map, helping you
+            find popular spots.</div>
+    </div>
 
     <h3>Payments</h3>
-    <p><strong>Q: Is my payment information secure?</strong></p>
-    <p>A: Yes, all payments are processed through Stripe, a PCI-compliant payment processor. We never store your card
-        details.</p>
-
-    <p><strong>Q: What payment methods do you accept?</strong></p>
-    <p>A: We accept all major credit cards, debit cards, and Apple Pay.</p>
+    <div class="faq-item">
+        <div class="question">Q: Is my payment information secure?</div>
+        <div class="answer">A: Yes, all payments are processed through Stripe, a PCI-compliant payment processor. We
+            never store your card details.</div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: What payment methods do you accept?</div>
+        <div class="answer">A: We accept all major credit cards, debit cards, and Apple Pay.</div>
+    </div>
 
     <h3>Account & Privacy</h3>
-    <p><strong>Q: How do I delete my account?</strong></p>
-    <p>A: Go to Settings → Account → Delete Account. This action is permanent and cannot be undone.</p>
-
-    <p><strong>Q: How is my data used?</strong></p>
-    <p>A: Please review our <a href="privacy.html">Privacy Policy</a> for detailed information about data collection and
-        usage.</p>
+    <div class="faq-item">
+        <div class="question">Q: How do I delete my account?</div>
+        <div class="answer">A: Go to Settings → Account → Delete Account. This action is permanent and cannot be undone.
+        </div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: How is my data used?</div>
+        <div class="answer">A: Please review our <a href="privacy.html">Privacy Policy</a> for detailed information
+            about data collection and usage.</div>
+    </div>
 
     <h3>Troubleshooting</h3>
-    <p><strong>Q: The app isn't loading properly</strong></p>
-    <p>A: Try these steps:</p>
-    <ul>
-        <li>Close and restart the app</li>
-        <li>Check your internet connection</li>
-        <li>Update to the latest version</li>
-        <li>Restart your device</li>
-    </ul>
-
-    <p><strong>Q: I didn't receive my QR code</strong></p>
-    <p>A: Check your "My Guest Lists" or "My Tickets" section. If still missing, contact support@glist.app.</p>
+    <div class="faq-item">
+        <div class="question">Q: The app isn't loading properly</div>
+        <div class="answer">A: Try these steps:
+            <ul>
+                <li>Close and restart the app</li>
+                <li>Check your internet connection</li>
+                <li>Update to the latest version</li>
+                <li>Restart your device</li>
+            </ul>
+        </div>
+    </div>
+    <div class="faq-item">
+        <div class="question">Q: I didn't receive my QR code</div>
+        <div class="answer">A: Check your "My Guest Lists" or "My Tickets" section. If still missing, contact <a
+                href="mailto:support@glist.app">support@glist.app</a>.</div>
+    </div>
 
     <h2>Still Need Help?</h2>
     <p>If you can't find the answer to your question, please email us at <a
@@ -178,12 +235,11 @@
         <li>Screenshots (if applicable)</li>
         <li>Device type and iOS version</li>
     </ul>
-
     <p>We typically respond within 24 hours during business hours.</p>
 
-    <div style="margin-top: 3em; padding-top: 2em; border-top: 1px solid #ddd; text-align: center; color: #999;">
-        <p>© 2025 Glist. All rights reserved. | <a href="privacy.html">Privacy</a> | <a href="terms.html">Terms</a></p>
-    </div>
+    <hr>
+    <p style="text-align: center; font-size: 0.8em; color: #888;">&copy; 2025 LSTD. All rights reserved. | <a
+            href="privacy.html">Privacy</a> | <a href="terms.html">Terms</a></p>
 </body>
 
 </html>

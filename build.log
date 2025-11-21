@@ -1,0 +1,401 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme Glist -destination "generic/platform=iOS Simulator" clean build
+
+2025-11-20 22:49:28.440 xcodebuild[70879:12359360] [MT] IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+** CLEAN SUCCEEDED **
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'Glist' in project 'Glist' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/etch/Downloads/APPS/glist/Glist/Glist/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: d724f48a62caa9cce4f255708eac7672
+Build description path: /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/XCBuildData/d724f48a62caa9cce4f255708eac7672.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -o /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache
+
+CreateBuildDirectory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    builtin-create-build-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex
+
+CreateBuildDirectory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    builtin-create-build-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products
+
+CreateBuildDirectory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    builtin-create-build-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    builtin-create-build-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    builtin-create-build-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist-03e8b4f6d21d97b1ae14d663310a2c4d-VFS-iphonesimulator/all-product-headers.yaml
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist-03e8b4f6d21d97b1ae14d663310a2c4d-VFS-iphonesimulator/all-product-headers.yaml
+
+CreateBuildDirectory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator
+    cd /Users/etch/Downloads/APPS/glist/Glist/Glist.xcodeproj
+    builtin-create-build-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.LinkFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.LinkFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist_const_extract_protocols.json (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-OutputFileMap.json (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.SwiftFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.SwiftFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.SwiftConstValuesFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.SwiftFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.SwiftFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist_const_extract_protocols.json (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.SwiftConstValuesFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.LinkFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.LinkFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-OutputFileMap.json (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-OutputFileMap.json
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.hmap (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.hmap
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.DependencyStaticMetadataFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.DependencyMetadataFileList (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-non-framework-target-headers.hmap (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibPath-normal-x86_64.txt (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibPath-normal-x86_64.txt
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibPath-normal-arm64.txt (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibInstallName-normal-x86_64.txt (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibInstallName-normal-x86_64.txt
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibInstallName-normal-arm64.txt (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/Entitlements-Simulated.plist (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    write-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/Entitlements-Simulated.plist
+
+MkDir /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /bin/mkdir -p /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app
+
+ProcessProductPackaging "" /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+    Entitlements:
+    
+    {
+    "application-identifier" = "CHSAVJ5X6U.beyond.Glist";
+}
+    
+    builtin-productPackagingUtility -entitlements -format xml -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent
+
+ProcessProductPackagingDER /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent.der (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /usr/bin/derq query -f xml -i /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent.der --raw
+
+MkDir /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_output/thinned (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /bin/mkdir -p /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_output/thinned
+
+MkDir /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_output/unthinned (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /bin/mkdir -p /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_output/unthinned
+
+GenerateAssetSymbols /Users/etch/Downloads/APPS/glist/Glist/Glist/Assets.xcassets (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/etch/Downloads/APPS/glist/Glist/Glist/Assets.xcassets --compile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app --output-format human-readable-text --notices --warnings --export-dependency-info /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_dependencies --output-partial-info-plist /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_generated_info.plist --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 18.0 --platform iphonesimulator --bundle-identifier beyond.Glist --generate-swift-asset-symbols /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+Ld /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Binary/__preview.dylib normal arm64 (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios18.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -O0 -L/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -install_name @rpath/Glist.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist_dependency_info.dat -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __ents_der -Xlinker /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent.der -Xlinker -no_adhoc_codesign -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Binary/__preview.dylib
+
+Ld /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Binary/__preview.dylib normal x86_64 (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios18.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -O0 -L/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -install_name @rpath/Glist.debug.dylib -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist_dependency_info.dat -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __ents_der -Xlinker /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist.app-Simulated.xcent.der -Xlinker -no_adhoc_codesign -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Binary/__preview.dylib
+
+CompileStoryboard /Users/etch/Downloads/APPS/glist/Glist/Glist/Launch\ Screen.storyboard (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --errors --warnings --notices --module Glist --output-partial-info-plist /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Launch\ Screen-SBPartialInfo.plist --auto-activate-custom-fonts --target-device iphone --target-device ipad --minimum-deployment-target 18.0 --output-format human-readable-text /Users/etch/Downloads/APPS/glist/Glist/Glist/Launch\ Screen.storyboard --compilation-directory /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build
+
+CompileAssetCatalogVariant thinned /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app /Users/etch/Downloads/APPS/glist/Glist/Glist/Assets.xcassets (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/etch/Downloads/APPS/glist/Glist/Glist/Assets.xcassets --compile /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 18.0 --platform iphonesimulator
+
+SwiftDriver Glist normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Glist -Onone -enforce-exclusivity\=checked @/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature MemberImportVisibility -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -target arm64-apple-ios18.0-simulator -g -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -output-file-map /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist_const_extract_protocols.json -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources-normal/arm64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/arm64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-Swift.h -working-directory /Users/etch/Downloads/APPS/glist/Glist -experimental-emit-module-separately -disable-cmo
+
+SwiftDriver Glist normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Glist -Onone -enforce-exclusivity\=checked @/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature MemberImportVisibility -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -target x86_64-apple-ios18.0-simulator -g -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -output-file-map /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist_const_extract_protocols.json -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources-normal/x86_64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/x86_64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-Swift.h -working-directory /Users/etch/Downloads/APPS/glist/Glist -experimental-emit-module-separately -disable-cmo
+
+CreateUniversalBinary /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app/__preview.dylib normal arm64\ x86_64 (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Binary/__preview.dylib /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Binary/__preview.dylib -output /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app/__preview.dylib
+
+LinkStoryboards (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    /Applications/Xcode.app/Contents/Developer/usr/bin/ibtool --errors --warnings --notices --module Glist --target-device iphone --target-device ipad --minimum-deployment-target 18.0 --output-format human-readable-text --link /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/Glist.app /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Launch\ Screen.storyboardc
+
+SwiftCompile normal arm64 Compiling\ FavoriteButton.swift,\ FavoritesManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoriteButton.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoritesManager.swift (in target 'Glist' from project 'Glist')
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoriteButton.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoritesManager.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+
+SwiftCompile normal arm64 Compiling\ GListApp.swift,\ GuestListManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift (in target 'Glist' from project 'Glist')
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /Users/etch/Downloads/APPS/glist/Glist/Glist/ContentView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Event.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoriteButton.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoritesManager.swift -primary-file /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift -primary-file /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Item.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Theme.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Venue.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueData.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueDetailView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueListView.swift /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.swift -emit-dependencies-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GListApp.d -emit-const-values-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GListApp.swiftconstvalues -emit-reference-dependencies-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GListApp.swiftdeps -serialize-diagnostics-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GListApp.dia -emit-dependencies-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GuestListManager.d -emit-const-values-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GuestListManager.swiftconstvalues -emit-reference-dependencies-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GuestListManager.swiftdeps -serialize-diagnostics-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GuestListManager.dia -emit-localized-strings -emit-localized-strings-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64 -target arm64-apple-ios18.0-simulator -module-can-import-version DeveloperToolsSupport 23.0.4 23.0.4 -module-can-import-version SwiftUI 7.0.84.1 7.0.84 -module-can-import-version UIKit 9088.1.113 9088.1.113 -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftDataMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftDataMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-dependencies-2.json -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -I /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -profile-generate -profile-coverage-mapping -swift-version 5 -enforce-exclusivity\=checked -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist_const_extract_protocols.json -enable-upcoming-feature MemberImportVisibility -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -default-isolation\=MainActor -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/etch/Downloads/APPS/glist/Glist -enable-anonymous-context-mangled-names -file-compilation-dir /Users/etch/Downloads/APPS/glist/Glist -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources-normal/arm64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/arm64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Glist -frontend-parseable-output -disable-clang-spi -target-sdk-version 26.0 -target-sdk-name iphonesimulator26.0 -clang-target arm64-apple-ios26.0-simulator -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GListApp.o -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GuestListManager.o -index-unit-output-path /Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GListApp.o -index-unit-output-path /Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/GuestListManager.o -index-store-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Index.noindex/DataStore -index-system-modules
+
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:12:7: error: type 'GuestListManager' does not conform to protocol 'ObservableObject'
+class GuestListManager: ObservableObject {
+      ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:12:7: note: add stubs for conformance
+class GuestListManager: ObservableObject {
+      ^
+Combine.ObservableObject.objectWillChange:2:5: note: protocol requires property 'objectWillChange' with type 'Self.ObjectWillChangePublisher'
+var objectWillChange: Self.ObjectWillChangePublisher { get }}
+    ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:13:6: error: initializer 'init(wrappedValue:)' is not available due to missing import of defining module 'Combine'
+    @Published var requests: [GuestListRequest] = []
+     ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+<unknown>:0: error: static subscript 'subscript(_enclosingInstance:wrapped:storage:)' is not available due to missing import of defining module 'Combine'
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Glist (in target 'Glist' from project 'Glist')
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -emit-module -experimental-skip-non-inlinable-function-bodies-without-types /Users/etch/Downloads/APPS/glist/Glist/Glist/ContentView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Event.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoriteButton.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoritesManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Item.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Theme.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Venue.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueData.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueDetailView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueListView.swift /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.swift -target arm64-apple-ios18.0-simulator -module-can-import-version DeveloperToolsSupport 23.0.4 23.0.4 -module-can-import-version SwiftUI 7.0.84.1 7.0.84 -module-can-import-version UIKit 9088.1.113 9088.1.113 -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftDataMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftDataMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-dependencies-2.json -Xllvm -aarch64-use-tbi -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -I /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -profile-generate -profile-coverage-mapping -swift-version 5 -enforce-exclusivity\=checked -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist_const_extract_protocols.json -enable-upcoming-feature MemberImportVisibility -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -default-isolation\=MainActor -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/etch/Downloads/APPS/glist/Glist -enable-anonymous-context-mangled-names -file-compilation-dir /Users/etch/Downloads/APPS/glist/Glist -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources-normal/arm64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/arm64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Glist -frontend-parseable-output -disable-clang-spi -target-sdk-version 26.0 -target-sdk-name iphonesimulator26.0 -clang-target arm64-apple-ios26.0-simulator -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -emit-module-doc-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.swiftdoc -emit-module-source-info-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.swiftsourceinfo -emit-objc-header-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-Swift.h -serialize-diagnostics-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-primary-emit-module.dia -emit-dependencies-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist-primary-emit-module.d -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.swiftmodule -emit-abi-descriptor-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/arm64/Glist.abi.json
+
+EmitSwiftModule normal arm64 (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:12:7: error: type 'GuestListManager' does not conform to protocol 'ObservableObject'
+class GuestListManager: ObservableObject {
+      ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:12:7: note: add stubs for conformance
+class GuestListManager: ObservableObject {
+      ^
+Combine.ObservableObject.objectWillChange:2:5: note: protocol requires property 'objectWillChange' with type 'Self.ObjectWillChangePublisher'
+var objectWillChange: Self.ObjectWillChangePublisher { get }}
+    ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:13:6: error: initializer 'init(wrappedValue:)' is not available due to missing import of defining module 'Combine'
+    @Published var requests: [GuestListRequest] = []
+     ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+
+SwiftCompile normal arm64 Compiling\ Item.swift,\ Theme.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Item.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Theme.swift (in target 'Glist' from project 'Glist')
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/Item.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/Theme.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+
+SwiftCompile normal arm64 Compiling\ VenueDetailView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueDetailView.swift (in target 'Glist' from project 'Glist')
+
+SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueDetailView.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+
+SwiftEmitModule normal x86_64 Emitting\ module\ for\ Glist (in target 'Glist' from project 'Glist')
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -emit-module -experimental-skip-non-inlinable-function-bodies-without-types /Users/etch/Downloads/APPS/glist/Glist/Glist/ContentView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Event.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoriteButton.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/FavoritesManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Item.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Theme.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/Venue.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueData.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueDetailView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueListView.swift /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/GeneratedAssetSymbols.swift -target x86_64-apple-ios18.0-simulator -module-can-import-version DeveloperToolsSupport 23.0.4 23.0.4 -module-can-import-version SwiftUI 7.0.84.1 7.0.84 -module-can-import-version UIKit 9088.1.113 9088.1.113 -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftDataMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftDataMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-dependencies-1.json -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.0.sdk -I /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -F /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=5 -module-cache-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -profile-generate -profile-coverage-mapping -swift-version 5 -enforce-exclusivity\=checked -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist_const_extract_protocols.json -enable-upcoming-feature MemberImportVisibility -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -default-isolation\=MainActor -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/etch/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/etch/Downloads/APPS/glist/Glist -enable-anonymous-context-mangled-names -file-compilation-dir /Users/etch/Downloads/APPS/glist/Glist -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.0-23A339-26257891a6c027eb51374368541b8346.sdkstatcache -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-generated-files.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-own-target-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-all-target-headers.hmap -Xcc -iquote -Xcc /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Glist-project-headers.hmap -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources-normal/x86_64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources/x86_64 -Xcc -I/Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Glist -frontend-parseable-output -disable-clang-spi -target-sdk-version 26.0 -target-sdk-name iphonesimulator26.0 -clang-target x86_64-apple-ios26.0-simulator -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -emit-module-doc-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.swiftdoc -emit-module-source-info-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.swiftsourceinfo -emit-objc-header-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-Swift.h -serialize-diagnostics-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-primary-emit-module.dia -emit-dependencies-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist-primary-emit-module.d -o /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.swiftmodule -emit-abi-descriptor-path /Users/etch/Library/Developer/Xcode/DerivedData/Glist-cufzzxofvqwyuzetuqpkvqdnmner/Build/Intermediates.noindex/Glist.build/Debug-iphonesimulator/Glist.build/Objects-normal/x86_64/Glist.abi.json
+
+EmitSwiftModule normal x86_64 (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:12:7: error: type 'GuestListManager' does not conform to protocol 'ObservableObject'
+class GuestListManager: ObservableObject {
+      ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:12:7: note: add stubs for conformance
+class GuestListManager: ObservableObject {
+      ^
+Combine.ObservableObject.objectWillChange:2:5: note: protocol requires property 'objectWillChange' with type 'Self.ObjectWillChangePublisher'
+var objectWillChange: Self.ObjectWillChangePublisher { get }}
+    ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:13:6: error: initializer 'init(wrappedValue:)' is not available due to missing import of defining module 'Combine'
+    @Published var requests: [GuestListRequest] = []
+     ^
+/Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift:2:1: note: add import of module 'Combine'
+
+^
+
+SwiftCompile normal x86_64 Compiling\ VenueListView.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueListView.swift (in target 'Glist' from project 'Glist')
+SwiftCompile normal x86_64 /Users/etch/Downloads/APPS/glist/Glist/Glist/VenueListView.swift (in target 'Glist' from project 'Glist')
+    cd /Users/etch/Downloads/APPS/glist/Glist
+    
+
+note: Disabling hardened runtime with ad-hoc codesigning. (in target 'Glist' from project 'Glist')
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 Compiling\ GListApp.swift,\ GuestListManager.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift (in target 'Glist' from project 'Glist')
+	SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/GListApp.swift (in target 'Glist' from project 'Glist')
+	SwiftCompile normal arm64 /Users/etch/Downloads/APPS/glist/Glist/Glist/GuestListManager.swift (in target 'Glist' from project 'Glist')
+	SwiftEmitModule normal arm64 Emitting\ module\ for\ Glist (in target 'Glist' from project 'Glist')
+	EmitSwiftModule normal arm64 (in target 'Glist' from project 'Glist')
+	SwiftEmitModule normal x86_64 Emitting\ module\ for\ Glist (in target 'Glist' from project 'Glist')
+	EmitSwiftModule normal x86_64 (in target 'Glist' from project 'Glist')
+	Building project Glist with scheme Glist
+(8 failures)
