@@ -25,7 +25,7 @@ struct VenueMapView: View {
                     
                     ForEach(venueManager.venues) { venue in
                         Annotation(venue.name, coordinate: venue.coordinate) {
-                            VenueMarker(venue: venue, friendsAtVenue: socialManager.getFriendsAt(venueId: venue.id))
+                            VenueMarker(venue: venue, friendsAtVenue: socialManager.getFriendsAt(venueId: venue.id.uuidString))
                                 .onTapGesture {
                                     selectedVenue = venue
                                 }
@@ -58,7 +58,7 @@ struct VenueMapView: View {
                 if let user = authManager.user {
                     for venue in venueManager.venues {
                         Task {
-                            await socialManager.fetchFriendsGoing(venueId: venue.id, currentUserFollowing: user.following)
+                            await socialManager.fetchFriendsGoing(venueId: venue.id.uuidString, currentUserFollowing: user.following)
                         }
                     }
                 }
@@ -145,7 +145,7 @@ struct VenueMapCard: View {
                         .foregroundStyle(.gray)
                     
                     // Friends indicator
-                    let friends = socialManager.getFriendsAt(venueId: venue.id)
+                    let friends = socialManager.getFriendsAt(venueId: venue.id.uuidString)
                     if !friends.isEmpty {
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill")

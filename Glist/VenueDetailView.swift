@@ -188,11 +188,10 @@ struct VenueDetailView: View {
                         }
                     }
                     
-                        }
-                    }
+
                     
                     // Who's Going Section
-                    let friendsAtVenue = socialManager.getFriendsAt(venueId: venue.id)
+                    let friendsAtVenue = socialManager.getFriendsAt(venueId: venue.id.uuidString)
                     if !friendsAtVenue.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("WHO'S GOING")
@@ -331,40 +330,42 @@ struct VenueDetailView: View {
                 }
                 .padding(24)
             }
-        }
+
         .background(Color.theme.background)
-        .ignoresSafeArea(edges: .top)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "arrow.left")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.white)
-                        .padding(8)
-                        .background(.black.opacity(0.5))
-                        .clipShape(Circle())
+            .ignoresSafeArea(edges: .top)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.white)
+                            .padding(8)
+                            .background(.black.opacity(0.5))
+                            .clipShape(Circle())
+                    }
                 }
             }
-        }
-        .onAppear {
-            if let user = authManager.user {
-                Task {
-                    await socialManager.fetchFriendsGoing(venueId: venue.id, currentUserFollowing: user.following)
+            .onAppear {
+                if let user = authManager.user {
+                    Task {
+                        await socialManager.fetchFriendsGoing(venueId: venue.id.uuidString, currentUserFollowing: user.following)
+                    }
                 }
             }
-        }
-        .sheet(item: $selectedEvent) { event in
-            EventTicketView(venue: venue, event: event)
-        }
-        .sheet(isPresented: $showGuestListSheet) {
-            GuestListFormView(venue: venue)
-        }
-        .sheet(isPresented: $showTableBooking) {
-            TableBookingView(venue: venue)
-        }
+            .sheet(item: $selectedEvent) { event in
+                EventTicketView(venue: venue, event: event)
+            }
+            .sheet(isPresented: $showGuestListSheet) {
+                GuestListFormView(venue: venue)
+            }
+            .sheet(isPresented: $showTableBooking) {
+                TableBookingView(venue: venue)
+            }
+        
+    }
     }
 }
 

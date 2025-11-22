@@ -2,25 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleIdentifier</key>
-	<string>com.etch.glist</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
-	<key>CFBundleVersion</key>
-	<string>1</string>
-	<key>CFBundleName</key>
-	<string>LSTD</string>
-	<key>CFBundleDisplayName</key>
-	<string>LSTD</string>
-	<key>UILaunchStoryboardName</key>
-	<string>Launch Screen</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
 	</array>
-	<key>NSCameraUsageDescription</key>
-	<string>LSTD needs camera access to scan QR codes for guest list verification.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>LSTD needs your location to show venues and events near you.</string>
+	<key>CFBundleDisplayName</key>
+	<string>LSTD</string>
 </dict>
 </plist>

@@ -31,7 +31,7 @@ struct AuthView: View {
                             .font(.system(size: 50))
                             .foregroundStyle(.white)
                         
-                        Text("GLIST")
+                        Text("LSTD")
                             .font(Theme.Fonts.display(size: 40))
                             .tracking(8)
                             .foregroundStyle(.white)

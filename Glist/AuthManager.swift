@@ -71,6 +71,35 @@ class AuthManager: ObservableObject {
         self.userRole = .user
     }
     
+    func updateName(_ name: String) async throws {
+        guard var currentUser = user else { return }
+        currentUser.name = name // Update local model temporarily
+        
+        // Update in Firestore
+        try await FirestoreManager.shared.updateUser(userId: currentUser.id, data: ["name": name])
+        
+        // Update local state
+        await MainActor.run {
+            self.user?.name = name
+        }
+    }
+    
+    func updateNotificationPreferences(_ preferences: NotificationPreferences) async throws {
+        guard let userId = user?.id else { return }
+        
+        let data: [String: Any] = [
+            "guestListUpdates": preferences.guestListUpdates,
+            "newVenues": preferences.newVenues,
+            "promotions": preferences.promotions
+        ]
+        
+        try await FirestoreManager.shared.updateNotificationPreferences(userId: userId, data: data)
+        
+        await MainActor.run {
+            self.user?.notificationPreferences = preferences
+        }
+    }
+    
     deinit {
         if let handler = authStateHandler {
             Auth.auth().removeStateDidChangeListener(handler)
@@ -82,7 +111,7 @@ class AuthManager: ObservableObject {
 struct User: Identifiable, Codable {
     let id: String
     let email: String
-    let name: String
+    var name: String
     let role: UserRole
     var tier: UserTier = .standard
     let createdAt: Date
@@ -91,8 +120,13 @@ struct User: Identifiable, Codable {
     var following: [String] = []
     var followers: [String] = []
     var isPrivate: Bool = false
+    var fcmToken: String?
+    var notificationPreferences: NotificationPreferences
+    var rewardPoints: Int
+    var noShowCount: Int
+    var isBanned: Bool
     
-    init(id: String, email: String, name: String, role: UserRole, tier: UserTier = .standard, createdAt: Date, favoriteVenueIds: [String], profileImage: String? = nil, following: [String] = [], followers: [String] = [], isPrivate: Bool = false) {
+    init(id: String, email: String, name: String, role: UserRole, tier: UserTier = .standard, createdAt: Date, favoriteVenueIds: [String], profileImage: String? = nil, following: [String] = [], followers: [String] = [], isPrivate: Bool = false, fcmToken: String? = nil, notificationPreferences: NotificationPreferences = NotificationPreferences(), rewardPoints: Int = 0, noShowCount: Int = 0, isBanned: Bool = false) {
         self.id = id
         self.email = email
         self.name = name
@@ -104,6 +138,11 @@ struct User: Identifiable, Codable {
         self.following = following
         self.followers = followers
         self.isPrivate = isPrivate
+        self.fcmToken = fcmToken
+        self.notificationPreferences = notificationPreferences
+        self.rewardPoints = rewardPoints
+        self.noShowCount = noShowCount
+        self.isBanned = isBanned
     }
     
     init(firebaseUser: FirebaseAuth.User) {
@@ -118,7 +157,18 @@ struct User: Identifiable, Codable {
         self.following = []
         self.followers = []
         self.isPrivate = false
+        self.fcmToken = nil
+        self.notificationPreferences = NotificationPreferences()
+        self.rewardPoints = 0
+        self.noShowCount = 0
+        self.isBanned = false
     }
+}
+
+struct NotificationPreferences: Codable {
+    var guestListUpdates: Bool = true
+    var newVenues: Bool = false
+    var promotions: Bool = false
 }
 
 enum UserRole: String, Codable {

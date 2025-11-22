@@ -20,7 +20,17 @@ struct Venue: Identifiable {
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func == (lhs: Venue, rhs: Venue) -> Bool {
+        lhs.id == rhs.id
+    }
 }
+
+extension Venue: Hashable {}
 
 struct Table: Identifiable, Codable {
     var id = UUID()

@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 struct Event: Identifiable {
     let id = UUID()

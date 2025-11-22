@@ -37,6 +37,11 @@ struct AccountSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
+                        if name != authManager.user?.name {
+                            Task {
+                                try? await authManager.updateName(name)
+                            }
+                        }
                         dismiss()
                     }
                 }
@@ -52,6 +57,8 @@ struct AccountSettingsView: View {
 // MARK: - Notifications
 struct NotificationsView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authManager: AuthManager
+    @StateObject private var notificationManager = NotificationManager.shared
     @State private var guestListUpdates = true
     @State private var newVenues = false
     @State private var promotions = false
@@ -62,14 +69,31 @@ struct NotificationsView: View {
                 Color.theme.background.ignoresSafeArea()
                 
                 Form {
-                    Section("PUSH NOTIFICATIONS") {
+                    Section("STATUS") {
+                        HStack {
+                            Text("Push Notifications")
+                            Spacer()
+                            Text(notificationManager.isAuthorized ? "On" : "Off")
+                                .foregroundStyle(notificationManager.isAuthorized ? .green : .red)
+                        }
+                        
+                        if !notificationManager.isAuthorized {
+                            Button("Enable in Settings") {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section("PREFERENCES") {
                         Toggle("Guest List Updates", isOn: $guestListUpdates)
                         Toggle("New Venues", isOn: $newVenues)
                         Toggle("Promotions", isOn: $promotions)
                     }
                     
                     Section {
-                        Text("Push notifications are not yet configured. This feature will be available soon.")
+                        Text("Manage what notifications you receive from LSTD.")
                             .font(.caption)
                             .foregroundStyle(.gray)
                     }
@@ -85,6 +109,28 @@ struct NotificationsView: View {
                     }
                 }
             }
+            .onAppear {
+                notificationManager.getNotificationSettings()
+                if let prefs = authManager.user?.notificationPreferences {
+                    guestListUpdates = prefs.guestListUpdates
+                    newVenues = prefs.newVenues
+                    promotions = prefs.promotions
+                }
+            }
+            .onChange(of: guestListUpdates) { _ in updatePreferences() }
+            .onChange(of: newVenues) { _ in updatePreferences() }
+            .onChange(of: promotions) { _ in updatePreferences() }
+        }
+    }
+    
+    private func updatePreferences() {
+        let prefs = NotificationPreferences(
+            guestListUpdates: guestListUpdates,
+            newVenues: newVenues,
+            promotions: promotions
+        )
+        Task {
+            try? await authManager.updateNotificationPreferences(prefs)
         }
     }
 }
@@ -117,14 +163,14 @@ struct PrivacyView: View {
                                 .fontWeight(.bold)
                                 .foregroundStyle(.gray)
                             
-                            Text("To delete your account and all associated data, please contact support@glist.com")
+                            Text("To delete your account and all associated data, please contact support@lstd.com")
                                 .font(Theme.Fonts.body(size: 14))
                                 .foregroundStyle(.white)
                         }
                         
                         Button {
-                            if let url = URL(string: "https://glist.com/privacy") {
-                                // Open privacy policy
+                            if let url = URL(string: "https://lstd.com/privacy") {
+                                UIApplication.shared.open(url)
                             }
                         } label: {
                             HStack {
@@ -170,7 +216,7 @@ struct HelpView: View {
                         HelpItem(
                             icon: "envelope.fill",
                             title: "Email Support",
-                            subtitle: "support@glist.com"
+                            subtitle: "support@lstd.com"
                         )
                         
                         HelpItem(

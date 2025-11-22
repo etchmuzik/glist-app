@@ -1,11 +1,25 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseMessaging
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
+        
+        // Initialize NotificationManager and request permission
+        NotificationManager.shared.requestPermission()
+        application.registerForRemoteNotifications()
+        
         return true
+    }
+    
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+    
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Failed to register for remote notifications: \(error)")
     }
 }
 
@@ -13,9 +27,14 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct GListApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
+    @StateObject private var bookingManager = BookingManager()
+    @StateObject private var socialManager = SocialManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(bookingManager)
+                .environmentObject(socialManager)
         }
     }
 }

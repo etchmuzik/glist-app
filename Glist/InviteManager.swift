@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 class InviteManager: ObservableObject {
     @Published var inviteCode: String = ""
@@ -24,7 +25,7 @@ class InviteManager: ObservableObject {
         
         Use my code: \(inviteCode)
         
-        Download now: https://glist.app/invite/\(inviteCode)
+        Download now: https://lstd.app/invite/\(inviteCode)
         """
     }
     

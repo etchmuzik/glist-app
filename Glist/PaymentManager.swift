@@ -27,25 +27,15 @@ class PaymentManager: ObservableObject {
         // Simulate network delay
         try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
         
-        // Simulate random success/failure (90% success rate for demo)
-        let shouldSucceed = Double.random(in: 0...1) > 0.1
+        // DEMO PRODUCTION MODE: Always succeed
+        // Generate mock transaction ID
+        let transactionId = "txn_demo_\(UUID().uuidString.prefix(8))"
         
-        if shouldSucceed {
-            // Generate mock transaction ID
-            let transactionId = "txn_\(UUID().uuidString.prefix(8))"
-            
-            await MainActor.run {
-                status = .success(transactionId: transactionId)
-            }
-            
-            return transactionId
-        } else {
-            // Simulate payment failure
-            await MainActor.run {
-                status = .failed(error: "Payment declined by issuer")
-            }
-            throw PaymentError.paymentDeclined
+        await MainActor.run {
+            status = .success(transactionId: transactionId)
         }
+        
+        return transactionId
     }
     
     func reset() {

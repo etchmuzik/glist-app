@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct TicketCard: View {
     let ticket: EventTicket

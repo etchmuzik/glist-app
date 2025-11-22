@@ -1,5 +1,6 @@
 import SwiftUI
 import Charts
+import Combine
 
 struct PromoterDashboardView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -42,19 +43,19 @@ struct PromoterDashboardView: View {
                             
                             // Stats Row
                             HStack(spacing: 20) {
-                                StatCard(
+                                PromoterStatCard(
                                     icon: "list.bullet.clipboard",
                                     value: "\(promoterManager.guestLists.count)",
                                     label: "Active Lists"
                                 )
                                 
-                                StatCard(
+                                PromoterStatCard(
                                     icon: "dollarsign.circle",
                                     value: "\(promoterManager.commissions.count)",
                                     label: "Commissions"
                                 )
                                 
-                                StatCard(
+                                PromoterStatCard(
                                     icon: "percent",
                                     value: "\(Int((promoterManager.promoter?.commissionRate ?? 0) * 100))%",
                                     label: "Rate"
@@ -132,7 +133,7 @@ struct EarningsCard: View {
     }
 }
 
-struct StatCard: View {
+struct PromoterStatCard: View {
     let icon: String
     let value: String
     let label: String

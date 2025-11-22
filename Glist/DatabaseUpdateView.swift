@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseFirestore
 
 struct DatabaseUpdateView: View {
     @EnvironmentObject var venueManager: VenueManager
@@ -142,7 +143,7 @@ struct DatabaseUpdateView: View {
                 
                 // Step 5: Create indexes
                 await addLog("Creating database indexes...")
-                await Task.sleep(nanoseconds: 1_000_000_000)
+                try await Task.sleep(nanoseconds: 1_000_000_000)
                 await updateProgress(1.0)
                 
                 await addLog("✅ Database update complete!")

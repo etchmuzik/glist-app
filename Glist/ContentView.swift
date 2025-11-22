@@ -121,333 +121,13 @@ struct ProfileView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
-                        // Header & Avatar
-                        VStack(spacing: 20) {
-                            ZStack {
-                                Circle()
-                                    .stroke(LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
-                                    .frame(width: 110, height: 110)
-                                
-                                VStack(spacing: 16) {
-                                    if let user = authManager.user {
-                                        ZStack(alignment: .bottomTrailing) {
-                                            Image(systemName: "person.circle.fill")
-                                                .font(.system(size: 80))
-                                                .foregroundStyle(.gray)
-                                                .background(Circle().fill(Color.white))
-                                            
-                                            // Tier Badge
-                                            if user.tier != .standard {
-                                                Image(systemName: "crown.fill")
-                                                    .font(.system(size: 20))
-                                                    .foregroundStyle(.white)
-                                                    .padding(8)
-                                                    .background(Color(hex: user.tier == .vip ? "FFD700" : "9D00FF"))
-                                                    .clipShape(Circle())
-                                                    .overlay(Circle().stroke(Color.theme.background, lineWidth: 2))
-                                                    .offset(x: 5, y: 5)
-                                            }
-                                        }
-                                        
-                                        VStack(spacing: 4) {
-                                            Text(user.name)
-                                                .font(Theme.Fonts.display(size: 24))
-                                                .foregroundStyle(.white)
-                                            
-                                            Text(user.email)
-                                                .font(Theme.Fonts.body(size: 14))
-                                                .foregroundStyle(.gray)
-                                            
-                                            // Tier Label
-                                            Text(user.tier.rawValue.uppercased())
-                                                .font(Theme.Fonts.body(size: 12))
-                                                .fontWeight(.bold)
-                                                .foregroundStyle(Color(hex: user.tier == .standard ? "808080" : (user.tier == .vip ? "FFD700" : "9D00FF")))
-                                                .padding(.top, 4)
-                                        }
-                                        
-                                        // Upgrade Button (if not Member)
-                                        if user.tier != .member {
-                                            Button {
-                                                showSubscription = true
-                                            } label: {
-                                                Text("UPGRADE MEMBERSHIP")
-                                                    .font(Theme.Fonts.body(size: 12))
-                                                    .fontWeight(.bold)
-                                                    .foregroundStyle(.black)
-                                                    .padding(.horizontal, 20)
-                                                    .padding(.vertical, 10)
-                                                    .background(Color.white)
-                                                    .clipShape(Capsule())
-                                            }
-                                            .padding(.top, 8)
-                                        }
-                                        
-                                        // Social Stats & Find Friends
-                                        HStack(spacing: 20) {
-                                            VStack {
-                                                Text("\(user.followers.count)")
-                                                    .font(Theme.Fonts.display(size: 18))
-                                                    .foregroundStyle(.white)
-                                                Text("Followers")
-                                                    .font(Theme.Fonts.body(size: 12))
-                                                    .foregroundStyle(.gray)
-                                            }
-                                            
-                                            VStack {
-                                                Text("\(user.following.count)")
-                                                    .font(Theme.Fonts.display(size: 18))
-                                                    .foregroundStyle(.white)
-                                                Text("Following")
-                                                    .font(Theme.Fonts.body(size: 12))
-                                                    .foregroundStyle(.gray)
-                                            }
-                                            
-                                            NavigationLink(destination: SocialView()) {
-                                                Text("Find Friends")
-                                                    .font(Theme.Fonts.body(size: 12))
-                                                    .fontWeight(.bold)
-                                                    .foregroundStyle(.black)
-                                                    .padding(.horizontal, 16)
-                                                    .padding(.vertical, 8)
-                                                    .background(Color.white)
-                                                    .clipShape(Capsule())
-                                            }
-                                        }
-                                        .padding(.top, 8)
-                                    } else {
-                                        Circle()
-                                            .fill(Color.theme.surface)
-                                            .frame(width: 100, height: 100)
-                                            .overlay {
-                                                Text("G")
-                                                    .font(Theme.Fonts.display(size: 40))
-                                                    .foregroundStyle(Color.theme.textPrimary)
-                                            }
-                                        
-                                        VStack(spacing: 8) {
-                                            Text("GUEST USER")
-                                                .font(Theme.Fonts.display(size: 24))
-                                                .foregroundStyle(Color.theme.textPrimary)
-                                            
-                                            Text("DUBAI, UAE")
-                                                .font(Theme.Fonts.body(size: 12))
-                                                .foregroundStyle(Color.theme.textSecondary)
-                                                .tracking(2)
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 6)
-                                                .background(Color.theme.surface)
-                                                .clipShape(Capsule())
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Stats Row
-                            HStack(spacing: 40) {
-                                StatItem(value: "\(guestListManager.requests.count)", label: "Guest Lists")
-                                StatItem(value: "\(bookingManager.bookings.count)", label: "Bookings")
-                                StatItem(value: "\(favoriteVenues.count)", label: "Favorites")
-                            }
-                            .padding(.top, 10)
-                        }
-                        .padding(.top, 20)
-                        
-                        // My Guest Lists
-                        if !guestListManager.requests.isEmpty {
-                            VStack(alignment: .leading, spacing: 16) {
-                                SectionHeader(title: "MY GUEST LISTS")
-                                
-                                ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 16) {
-                                        ForEach(guestListManager.requests) { request in
-                                            Button {
-                                                selectedRequest = request
-                                            } label: {
-                                                GuestListTicket(
-                                                    venueName: request.venueName,
-                                                    date: request.date.formatted(.dateTime.month().day()),
-                                                    status: request.status
-                                                )
-                                            }
-                                        }
-                                    }
-                                    .padding(.horizontal, 20)
-                                }
-                            }
-                        }
-                        
-                        // My Tickets
-                        if !ticketManager.tickets.isEmpty {
-                            VStack(alignment: .leading, spacing: 16) {
-                                SectionHeader(title: "MY TICKETS")
-                                
-                                ForEach(ticketManager.tickets) { ticket in
-                                    Button {
-                                        selectedTicket = ticket
-                                    } label: {
-                                        TicketCard(ticket: ticket)
-                                    }
-                                }
-                                .padding(.horizontal, 20)
-                            }
-                        }
-                        
-                        // My Bookings
-                        if !bookingManager.bookings.isEmpty {
-                            VStack(alignment: .leading, spacing: 16) {
-                                SectionHeader(title: "MY BOOKINGS")
-                                
-                                ForEach(bookingManager.bookings) { booking in
-                                    BookingCard(booking: booking)
-                                }
-                                .padding(.horizontal, 20)
-                            }
-                        }
-                        
-                        // Favorites
-                        if !favoriteVenues.isEmpty {
-                            VStack(alignment: .leading, spacing: 16) {
-                                SectionHeader(title: "FAVORITES")
-                                
-                                ForEach(favoriteVenues) { venue in
-                                    NavigationLink(destination: VenueDetailView(venue: venue)) {
-                                        HStack(spacing: 16) {
-                                            Rectangle()
-                                                .fill(Color.theme.surface)
-                                                .frame(width: 70, height: 70)
-                                                .overlay {
-                                                    Image(systemName: "photo")
-                                                        .foregroundStyle(Color.theme.textSecondary)
-                                                }
-                                            
-                                            VStack(alignment: .leading, spacing: 6) {
-                                                Text(venue.name.uppercased())
-                                                    .font(Theme.Fonts.display(size: 16))
-                                                    .foregroundStyle(Color.theme.textPrimary)
-                                                
-                                                Text(venue.type.uppercased())
-                                                    .font(Theme.Fonts.body(size: 12))
-                                                    .foregroundStyle(Color.theme.accent)
-                                                
-                                                HStack(spacing: 4) {
-                                                    Image(systemName: "star.fill")
-                                                        .font(.caption2)
-                                                        .foregroundStyle(.yellow)
-                                                    Text(String(format: "%.1f", venue.rating))
-                                                        .font(Theme.Fonts.body(size: 12))
-                                                        .foregroundStyle(Color.theme.textSecondary)
-                                                }
-                                            }
-                                            
-                                            Spacer()
-                                            
-                                            Image(systemName: "chevron.right")
-                                                .foregroundStyle(Color.theme.textSecondary)
-                                        }
-                                        .padding(12)
-                                        .background(Color.theme.surface.opacity(0.3))
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    }
-                                }
-                                .padding(.horizontal, 20)
-                            }
-                        }
-                        
-                        // Invite Friends
-                        VStack(alignment: .leading, spacing: 16) {
-                            SectionHeader(title: "GROW YOUR NETWORK")
-                            
-                            Button {
-                                showInvite = true
-                            } label: {
-                                HStack(spacing: 16) {
-                                    Image(systemName: "gift.fill")
-                                        .font(.title2)
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [Color.theme.accent, Color.purple],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .frame(width: 40)
-                                    
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Invite Friends")
-                                            .font(Theme.Fonts.body(size: 16))
-                                            .fontWeight(.bold)
-                                            .foregroundStyle(.white)
-                                        
-                                        Text("Earn rewards for every friend who joins")
-                                            .font(Theme.Fonts.body(size: 14))
-                                            .foregroundStyle(.gray)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    Image(systemName: "chevron.right")
-                                        .foregroundStyle(.gray)
-                                }
-                                .padding(16)
-                                .background(Color.theme.surface)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        
-                        // Settings Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            SectionHeader(title: "SETTINGS")
-                            
-                            VStack(spacing: 0) {
-                                Button {
-                                    showAccountSettings = true
-                                } label: {
-                                    SettingRow(icon: "person.circle", title: "Account Settings")
-                                }
-                                
-                                Divider()
-                                    .background(Color.theme.surface)
-                                    .padding(.leading, 64)
-                                
-                                Button {
-                                    showNotifications = true
-                                } label: {
-                                    SettingRow(icon: "bell", title: "Notifications")
-                                }
-                                
-                                Divider()
-                                    .background(Color.theme.surface)
-                                    .padding(.leading, 64)
-                                
-                                Button {
-                                    showPrivacy = true
-                                } label: {
-                                    SettingRow(icon: "lock", title: "Privacy & Security")
-                                }
-                                
-                                Divider()
-                                    .background(Color.theme.surface)
-                                    .padding(.leading, 64)
-                                
-                                Button {
-                                    showHelp = true
-                                } label: {
-                                    SettingRow(icon: "questionmark.circle", title: "Help & Support")
-                                }
-                                
-                                Divider()
-                                    .background(Color.theme.surface)
-                                    .padding(.leading, 64)
-                                
-                                Button {
-                                    showLogoutAlert = true
-                                } label: {
-                                    SettingRow(icon: "arrow.right.square", title: "Logout", color: .red)
-                                }
-                            }
-                        }
+                        headerSection
+                        guestListsSection
+                        ticketsSection
+                        bookingsSection
+                        favoritesSection
+                        inviteSection
+                        settingsSection
                     }
                     .padding(.bottom, 100)
                 }
@@ -503,7 +183,7 @@ struct ProfileView: View {
                     qrCodeId: request.qrCodeId ?? request.id.uuidString,
                     venueName: request.venueName,
                     guestName: request.name,
-                    date: request.date.formatted(date: .long, time: .omitted)
+                    date: request.date
                 )
                 .presentationDetents([.medium])
             }
@@ -512,7 +192,7 @@ struct ProfileView: View {
                     qrCodeId: ticket.qrCodeId,
                     venueName: ticket.venueName,
                     guestName: authManager.user?.name ?? "Guest",
-                    date: ticket.eventDate.formatted(date: .long, time: .shortened)
+                    date: ticket.eventDate
                 )
                 .presentationDetents([.medium])
             }
@@ -521,6 +201,347 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showInvite) {
                 InviteView()
+            }
+        }
+    }
+
+    // MARK: - Subviews
+
+    private var headerSection: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .stroke(LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                    .frame(width: 110, height: 110)
+                
+                VStack(spacing: 16) {
+                    if let user = authManager.user {
+                        ZStack(alignment: .bottomTrailing) {
+                            Image(systemName: "person.circle.fill")
+                                .font(.system(size: 80))
+                                .foregroundStyle(.gray)
+                                .background(Circle().fill(Color.white))
+                            
+                            // Tier Badge
+                            if user.tier != .standard {
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(.white)
+                                    .padding(8)
+                                    .background(Color(hex: user.tier == .vip ? "FFD700" : "9D00FF"))
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.theme.background, lineWidth: 2))
+                                    .offset(x: 5, y: 5)
+                            }
+                        }
+                        
+                        VStack(spacing: 4) {
+                            Text(user.name)
+                                .font(Theme.Fonts.display(size: 24))
+                                .foregroundStyle(.white)
+                            
+                            Text(user.email)
+                                .font(Theme.Fonts.body(size: 14))
+                                .foregroundStyle(.gray)
+                            
+                            // Tier Label
+                            Text(user.tier.rawValue.uppercased())
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color(hex: user.tier == .standard ? "808080" : (user.tier == .vip ? "FFD700" : "9D00FF")))
+                                .padding(.top, 4)
+                        }
+                        
+                        // Upgrade Button (if not Member)
+                        if user.tier != .member {
+                            Button {
+                                showSubscription = true
+                            } label: {
+                                Text("UPGRADE MEMBERSHIP")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(Color.white)
+                                    .clipShape(Capsule())
+                            }
+                            .padding(.top, 8)
+                        }
+                        
+                        // Social Stats & Find Friends
+                        HStack(spacing: 20) {
+                            VStack {
+                                Text("\(user.followers.count)")
+                                    .font(Theme.Fonts.display(size: 18))
+                                    .foregroundStyle(.white)
+                                Text("Followers")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(.gray)
+                            }
+                            
+                            VStack {
+                                Text("\(user.following.count)")
+                                    .font(Theme.Fonts.display(size: 18))
+                                    .foregroundStyle(.white)
+                                Text("Following")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(.gray)
+                            }
+                            
+                            NavigationLink(destination: SocialView()) {
+                                Text("Find Friends")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.white)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        .padding(.top, 8)
+                    } else {
+                        Circle()
+                            .fill(Color.theme.surface)
+                            .frame(width: 100, height: 100)
+                            .overlay {
+                                Text("G")
+                                    .font(Theme.Fonts.display(size: 40))
+                                    .foregroundStyle(Color.theme.textPrimary)
+                            }
+                        
+                        VStack(spacing: 8) {
+                            Text("GUEST USER")
+                                .font(Theme.Fonts.display(size: 24))
+                                .foregroundStyle(Color.theme.textPrimary)
+                            
+                            Text("DUBAI, UAE")
+                                .font(Theme.Fonts.body(size: 12))
+                                .foregroundStyle(Color.theme.textSecondary)
+                                .tracking(2)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.theme.surface)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+            }
+            
+            // Stats Row
+            HStack(spacing: 40) {
+                StatItem(value: "\(guestListManager.requests.count)", label: "Guest Lists")
+                StatItem(value: "\(bookingManager.bookings.count)", label: "Bookings")
+                StatItem(value: "\(favoriteVenues.count)", label: "Favorites")
+            }
+            .padding(.top, 10)
+        }
+        .padding(.top, 20)
+    }
+
+    @ViewBuilder
+    private var guestListsSection: some View {
+        if !guestListManager.requests.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "MY GUEST LISTS")
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(guestListManager.requests) { request in
+                            Button {
+                                selectedRequest = request
+                            } label: {
+                                GuestListTicket(
+                                    venueName: request.venueName,
+                                    date: request.date.formatted(.dateTime.month().day()),
+                                    status: request.status
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var ticketsSection: some View {
+        if !ticketManager.tickets.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "MY TICKETS")
+                
+                ForEach(ticketManager.tickets) { ticket in
+                    Button {
+                        selectedTicket = ticket
+                    } label: {
+                        TicketCard(ticket: ticket)
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var bookingsSection: some View {
+        if !bookingManager.bookings.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "MY BOOKINGS")
+                
+                ForEach(bookingManager.bookings) { booking in
+                    BookingCard(booking: booking)
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var favoritesSection: some View {
+        if !favoriteVenues.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "FAVORITES")
+                
+                ForEach(favoriteVenues) { venue in
+                    NavigationLink(destination: VenueDetailView(venue: venue)) {
+                        HStack(spacing: 16) {
+                            Rectangle()
+                                .fill(Color.theme.surface)
+                                .frame(width: 70, height: 70)
+                                .overlay {
+                                    Image(systemName: "photo")
+                                        .foregroundStyle(Color.theme.textSecondary)
+                                }
+                            
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(venue.name.uppercased())
+                                    .font(Theme.Fonts.display(size: 16))
+                                    .foregroundStyle(Color.theme.textPrimary)
+                                
+                                Text(venue.type.uppercased())
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(Color.theme.accent)
+                                
+                                HStack(spacing: 4) {
+                                    Image(systemName: "star.fill")
+                                        .font(.caption2)
+                                        .foregroundStyle(.yellow)
+                                    Text(String(format: "%.1f", venue.rating))
+                                        .font(Theme.Fonts.body(size: 12))
+                                        .foregroundStyle(Color.theme.textSecondary)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundStyle(Color.theme.textSecondary)
+                        }
+                        .padding(12)
+                        .background(Color.theme.surface.opacity(0.3))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+    }
+
+    private var inviteSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SectionHeader(title: "GROW YOUR NETWORK")
+            
+            Button {
+                showInvite = true
+            } label: {
+                HStack(spacing: 16) {
+                    Image(systemName: "gift.fill")
+                        .font(.title2)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.theme.accent, Color.purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 40)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Invite Friends")
+                            .font(Theme.Fonts.body(size: 16))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        
+                        Text("Earn rewards for every friend who joins")
+                            .font(Theme.Fonts.body(size: 14))
+                            .foregroundStyle(.gray)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.gray)
+                }
+                .padding(16)
+                .background(Color.theme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+
+    private var settingsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SectionHeader(title: "SETTINGS")
+            
+            VStack(spacing: 0) {
+                Button {
+                    showAccountSettings = true
+                } label: {
+                    SettingRow(icon: "person.circle", title: "Account Settings")
+                }
+                
+                Divider()
+                    .background(Color.theme.surface)
+                    .padding(.leading, 64)
+                
+                Button {
+                    showNotifications = true
+                } label: {
+                    SettingRow(icon: "bell", title: "Notifications")
+                }
+                
+                Divider()
+                    .background(Color.theme.surface)
+                    .padding(.leading, 64)
+                
+                Button {
+                    showPrivacy = true
+                } label: {
+                    SettingRow(icon: "lock", title: "Privacy & Security")
+                }
+                
+                Divider()
+                    .background(Color.theme.surface)
+                    .padding(.leading, 64)
+                
+                Button {
+                    showHelp = true
+                } label: {
+                    SettingRow(icon: "questionmark.circle", title: "Help & Support")
+                }
+                
+                Divider()
+                    .background(Color.theme.surface)
+                    .padding(.leading, 64)
+                
+                Button {
+                    showLogoutAlert = true
+                } label: {
+                    SettingRow(icon: "arrow.right.square", title: "Logout", color: .red)
+                }
             }
         }
     }
@@ -678,58 +699,118 @@ struct Line: Shape {
 
 struct OnboardingView: View {
     @Binding var isLoggedIn: Bool
-
+    @State private var isAnimating = false
+    @State private var showContent = false
+    
     var body: some View {
         ZStack {
+            // 1. Dynamic Background
             Color.black.ignoresSafeArea()
             
-            // Background texture/gradient (subtle)
-            LinearGradient(
-                colors: [Color(white: 0.1), .black],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
+            // Ambient Orbs
+            GeometryReader { proxy in
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: "9D00FF").opacity(0.3))
+                        .frame(width: 300, height: 300)
+                        .blur(radius: 80)
+                        .offset(x: isAnimating ? -100 : 100, y: isAnimating ? -150 : 150)
+                    
+                    Circle()
+                        .fill(Color(hex: "FF0055").opacity(0.2))
+                        .frame(width: 250, height: 250)
+                        .blur(radius: 80)
+                        .offset(x: isAnimating ? 150 : -150, y: isAnimating ? 100 : -100)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            
+            // 2. Content
             VStack(spacing: 0) {
                 Spacer()
-
-                // Logo Area
-                VStack(spacing: 24) {
-                    Image(systemName: "crown.fill") // Changed icon to something more "clubby"
-                        .font(.system(size: 60))
-                        .foregroundStyle(.white)
+                
+                // Logo Section
+                VStack(spacing: 16) {
+                    // Animated Crown Icon
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 70))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.white, .white.opacity(0.5)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .shadow(color: .white.opacity(0.5), radius: 20, x: 0, y: 0)
+                        .scaleEffect(isAnimating ? 1.0 : 0.8)
+                        .opacity(isAnimating ? 1 : 0)
                     
-                    Text("GLIST")
-                        .font(Theme.Fonts.display(size: 48))
-                        .tracking(8)
+                    // Main Title
+                    Text("LSTD")
+                        .font(Theme.Fonts.display(size: 56))
+                        .tracking(10)
                         .foregroundStyle(.white)
-
-                    Text("DUBAI NIGHTLIFE GUIDE")
+                        .shadow(color: Color(hex: "9D00FF").opacity(0.5), radius: 15, x: 0, y: 0)
+                        .scaleEffect(isAnimating ? 1.0 : 0.9)
+                        .opacity(isAnimating ? 1 : 0)
+                    
+                    // Tagline
+                    Text("ACCESS THE UNACCESSIBLE")
                         .font(Theme.Fonts.body(size: 14))
-                        .tracking(4)
-                        .foregroundStyle(Color.gray)
+                        .tracking(6)
+                        .foregroundStyle(Color.white.opacity(0.7))
+                        .opacity(showContent ? 1 : 0)
+                        .offset(y: showContent ? 0 : 20)
                 }
+                .padding(.bottom, 60)
                 
                 Spacer()
-
-                // Action
+                
+                // 3. Action Button
                 Button {
-                    withAnimation {
+                    let generator = UIImpactFeedbackGenerator(style: .heavy)
+                    generator.impactOccurred()
+                    
+                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
                         isLoggedIn = true
                     }
                 } label: {
-                    Text("ENTER")
-                        .font(Theme.Fonts.body(size: 16))
-                        .fontWeight(.bold)
-                        .tracking(4)
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.white)
+                    HStack(spacing: 12) {
+                        Text("ENTER THE NIGHT")
+                            .font(Theme.Fonts.body(size: 16))
+                            .fontWeight(.bold)
+                            .tracking(2)
+                        
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 14, weight: .bold))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        ZStack {
+                            Color.white
+                            
+                            // Subtle shimmer effect could go here
+                        }
+                    )
+                    .clipShape(Capsule())
+                    .shadow(color: .white.opacity(0.2), radius: 20, x: 0, y: 0)
                 }
-                .padding(.horizontal, 40)
-                .padding(.bottom, 60)
+                .padding(.horizontal, 32)
+                .padding(.bottom, 50)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 40)
+            }
+        }
+        .onAppear {
+            // Animation Sequence
+            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+            
+            withAnimation(.easeOut(duration: 1.0).delay(0.5)) {
+                showContent = true
             }
         }
     }

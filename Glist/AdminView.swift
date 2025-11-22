@@ -265,6 +265,26 @@ struct AdminGuestListCard: View {
                     .disabled(isUpdating)
                 }
             }
+            
+            // Actions (for Confirmed requests)
+            if request.status == "Confirmed" {
+                Button {
+                    markAsNoShow()
+                } label: {
+                    HStack {
+                        Image(systemName: "person.slash.fill")
+                        Text("NO SHOW")
+                            .font(Theme.Fonts.body(size: 12))
+                            .fontWeight(.bold)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(.gray)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+                .disabled(isUpdating)
+            }
         }
         .padding(16)
         .background(Color.theme.surface.opacity(0.5))
@@ -289,6 +309,29 @@ struct AdminGuestListCard: View {
                 }
             } catch {
                 print("Error updating status: \(error)")
+                isUpdating = false
+            }
+        }
+    }
+    
+    private func markAsNoShow() {
+        isUpdating = true
+        Task {
+            do {
+                // Update status
+                try await FirestoreManager.shared.updateGuestListStatus(
+                    requestId: request.id.uuidString,
+                    status: "No Show"
+                )
+                // Increment no-show count
+                try await FirestoreManager.shared.incrementNoShowCount(userId: request.userId)
+                
+                await MainActor.run {
+                    isUpdating = false
+                    onUpdate()
+                }
+            } catch {
+                print("Error marking no show: \(error)")
                 isUpdating = false
             }
         }
@@ -491,7 +534,7 @@ struct AnalyticsView: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 20)
-                .onChange(of: analyticsManager.selectedPeriod) { newValue in
+                .onChange(of: analyticsManager.selectedPeriod) { _, newValue in
                     Task {
                         await analyticsManager.fetchAnalytics(period: newValue)
                     }
@@ -812,7 +855,7 @@ struct ScannerView: View {
         .sheet(isPresented: $showScanner) {
             QRScannerView(scannedCode: $scannedCode)
         }
-        .onChange(of: scannedCode) { newValue in
+        .onChange(of: scannedCode) { _, newValue in
             if let code = newValue {
                 processScannedCode(code)
             }
@@ -855,6 +898,10 @@ struct ScannerView: View {
         Task {
             do {
                 try await FirestoreManager.shared.updateGuestListStatus(requestId: request.id.uuidString, status: "Checked In")
+                
+                // Add reward points (e.g., 100 points)
+                try await FirestoreManager.shared.addRewardPoints(userId: request.userId, points: 100)
+                
                 // Refresh local request
                 if let updatedRequest = try await FirestoreManager.shared.fetchGuestListRequest(qrCodeId: request.qrCodeId ?? request.id.uuidString) {
                     await MainActor.run {

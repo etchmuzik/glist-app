@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseFirestore
 
 class PromoterManager: ObservableObject {
     @Published var promoter: Promoter?

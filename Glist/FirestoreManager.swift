@@ -3,7 +3,7 @@ import FirebaseFirestore
 
 class FirestoreManager {
     static let shared = FirestoreManager()
-    private let db = Firestore.firestore()
+    let db = Firestore.firestore()
     
     // MARK: - User Management
     
@@ -13,7 +13,16 @@ class FirestoreManager {
             "name": user.name,
             "role": user.role.rawValue,
             "createdAt": Timestamp(date: user.createdAt),
-            "favoriteVenueIds": user.favoriteVenueIds
+            "favoriteVenueIds": user.favoriteVenueIds,
+            "fcmToken": user.fcmToken as Any,
+            "notificationPreferences": [
+                "guestListUpdates": user.notificationPreferences.guestListUpdates,
+                "newVenues": user.notificationPreferences.newVenues,
+                "promotions": user.notificationPreferences.promotions
+            ],
+            "rewardPoints": user.rewardPoints,
+            "noShowCount": user.noShowCount,
+            "isBanned": user.isBanned
         ]
         
         try await db.collection("users").document(user.id).setData(userData)
@@ -31,7 +40,21 @@ class FirestoreManager {
             role: UserRole(rawValue: data["role"] as? String ?? "user") ?? .user,
             createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
             favoriteVenueIds: data["favoriteVenueIds"] as? [String] ?? [],
-            profileImage: data["profileImage"] as? String
+            profileImage: data["profileImage"] as? String,
+            fcmToken: data["fcmToken"] as? String,
+            notificationPreferences: {
+                if let prefsData = data["notificationPreferences"] as? [String: Any] {
+                    return NotificationPreferences(
+                        guestListUpdates: prefsData["guestListUpdates"] as? Bool ?? true,
+                        newVenues: prefsData["newVenues"] as? Bool ?? false,
+                        promotions: prefsData["promotions"] as? Bool ?? false
+                    )
+                }
+                return NotificationPreferences()
+            }(),
+            rewardPoints: data["rewardPoints"] as? Int ?? 0,
+            noShowCount: data["noShowCount"] as? Int ?? 0,
+            isBanned: data["isBanned"] as? Bool ?? false
         )
     }
     
@@ -54,6 +77,8 @@ class FirestoreManager {
                 dressCode: data["dressCode"] as? String ?? "",
                 imageName: data["imageName"] as? String ?? "",
                 tags: data["tags"] as? [String] ?? [],
+                latitude: data["latitude"] as? Double ?? 25.2048,
+                longitude: data["longitude"] as? Double ?? 55.2708,
                 events: []
             )
             // Parse tables
@@ -227,6 +252,83 @@ class FirestoreManager {
         try await db.collection("users").document(userId).updateData([
             "favoriteVenueIds": venueIds
         ])
+    }
+    
+    func updateFCMToken(userId: String, token: String) async throws {
+        try await db.collection("users").document(userId).updateData([
+            "fcmToken": token
+        ])
+    }
+    
+    func updateUser(userId: String, data: [String: Any]) async throws {
+        try await db.collection("users").document(userId).updateData(data)
+    }
+    
+    func updateNotificationPreferences(userId: String, data: [String: Any]) async throws {
+        try await db.collection("users").document(userId).updateData([
+            "notificationPreferences": data
+        ])
+    }
+    
+    // MARK: - Rewards & Bans
+    
+    func addRewardPoints(userId: String, points: Int) async throws {
+        let userRef = db.collection("users").document(userId)
+        try await db.runTransaction({ (transaction, errorPointer) -> Any? in
+            let userDocument: DocumentSnapshot
+            do {
+                try userDocument = transaction.getDocument(userRef)
+            } catch let fetchError as NSError {
+                errorPointer?.pointee = fetchError
+                return nil
+            }
+            
+            guard let oldPoints = userDocument.data()?["rewardPoints"] as? Int else {
+                let error = NSError(
+                    domain: "AppErrorDomain",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Unable to retrieve reward points from snapshot \(userDocument)"]
+                )
+                errorPointer?.pointee = error
+                return nil
+            }
+            
+            transaction.updateData(["rewardPoints": oldPoints + points], forDocument: userRef)
+            return nil
+        })
+    }
+    
+    func incrementNoShowCount(userId: String) async throws {
+        let userRef = db.collection("users").document(userId)
+        try await db.runTransaction({ (transaction, errorPointer) -> Any? in
+            let userDocument: DocumentSnapshot
+            do {
+                try userDocument = transaction.getDocument(userRef)
+            } catch let fetchError as NSError {
+                errorPointer?.pointee = fetchError
+                return nil
+            }
+            
+            guard let noShowCount = userDocument.data()?["noShowCount"] as? Int else {
+                let error = NSError(
+                    domain: "AppErrorDomain",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Unable to retrieve noShowCount from snapshot \(userDocument)"]
+                )
+                errorPointer?.pointee = error
+                return nil
+            }
+            
+            let newCount = noShowCount + 1
+            var updates: [String: Any] = ["noShowCount": newCount]
+            
+            if newCount >= 5 {
+                updates["isBanned"] = true
+            }
+            
+            transaction.updateData(updates, forDocument: userRef)
+            return nil
+        })
     }
     
     // MARK: - Table Bookings

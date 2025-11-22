@@ -19,7 +19,7 @@ struct SocialView: View {
                         TextField("Find friends...", text: $searchText)
                             .foregroundStyle(.white)
                             .autocorrectionDisabled()
-                            .onChange(of: searchText) { newValue in
+                            .onChange(of: searchText) { _, newValue in
                                 socialManager.searchUsers(query: newValue)
                             }
                     }
