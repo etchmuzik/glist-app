@@ -1,4 +1,6 @@
 import SwiftUI
+import PhotosUI
+import UIKit
 
 // MARK: - Account Settings
 struct AccountSettingsView: View {
@@ -222,18 +224,16 @@ struct KYCSubmissionView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
     @State private var fullName: String = ""
-    @State private var documentType: String = "Passport"
+    @State private var documentType: String = "Emirates ID"
     @State private var documentNumber: String = ""
-    @State private var documentFrontURL: String = ""
-    @State private var documentBackURL: String = ""
-    @State private var selfieURL: String = ""
-    @State private var addressProofURL: String = ""
+    @State private var frontImageData: Data?
+    @State private var backImageData: Data?
+    @State private var frontItem: PhotosPickerItem?
+    @State private var backItem: PhotosPickerItem?
     @State private var notes: String = ""
     @State private var isSubmitting = false
     @State private var showSuccess = false
     @State private var errorMessage: String?
-    
-    private let documentTypes = ["Passport", "National ID", "Driver License"]
     
     var body: some View {
         NavigationStack {
@@ -256,23 +256,30 @@ struct KYCSubmissionView: View {
                     
                     Section("IDENTITY") {
                         TextField("Full Name", text: $fullName)
-                        Picker("Document Type", selection: $documentType) {
-                            ForEach(documentTypes, id: \.self) { type in
-                                Text(type).tag(type)
-                            }
+                        LabeledContent("Document Type") {
+                            Text(documentType)
+                                .foregroundStyle(.secondary)
                         }
                         TextField("Document Number", text: $documentNumber)
+                            .textInputAutocapitalization(.never)
                     }
                     
-                    Section("UPLOAD LINKS") {
-                        TextField("Front of ID (URL)", text: $documentFrontURL)
-                            .textInputAutocapitalization(.never)
-                        TextField("Back of ID (URL)", text: $documentBackURL)
-                            .textInputAutocapitalization(.never)
-                        TextField("Selfie / Live Photo (URL)", text: $selfieURL)
-                            .textInputAutocapitalization(.never)
-                        TextField("Address Proof (Utility Bill, URL)", text: $addressProofURL)
-                            .textInputAutocapitalization(.never)
+                    Section("EMIRATES ID UPLOADS") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            PhotosPicker(selection: $frontItem, matching: .images) {
+                                uploadLabel(title: "Front of Emirates ID", hasImage: frontImageData != nil)
+                            }
+                            if let image = imagePreview(for: frontImageData) {
+                                image
+                            }
+                            
+                            PhotosPicker(selection: $backItem, matching: .images) {
+                                uploadLabel(title: "Back of Emirates ID", hasImage: backImageData != nil)
+                            }
+                            if let image = imagePreview(for: backImageData) {
+                                image
+                            }
+                        }
                     }
                     
                     Section("NOTES") {
@@ -296,7 +303,7 @@ struct KYCSubmissionView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
-                    .disabled(isSubmitting || authManager.user == nil || documentNumber.isEmpty || fullName.isEmpty)
+                    .disabled(isSubmitting || authManager.user == nil || documentNumber.isEmpty || fullName.isEmpty || frontImageData == nil || backImageData == nil)
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -309,6 +316,12 @@ struct KYCSubmissionView: View {
             }
             .onAppear {
                 fullName = authManager.user?.name ?? ""
+            }
+            .onChange(of: frontItem) { newValue in
+                Task { frontImageData = await loadImageData(from: newValue) }
+            }
+            .onChange(of: backItem) { newValue in
+                Task { backImageData = await loadImageData(from: newValue) }
             }
         }
     }
@@ -327,10 +340,8 @@ struct KYCSubmissionView: View {
             fullName: fullName,
             documentType: documentType,
             documentNumber: documentNumber,
-            documentFrontURL: documentFrontURL.isEmpty ? nil : documentFrontURL,
-            documentBackURL: documentBackURL.isEmpty ? nil : documentBackURL,
-            selfieURL: selfieURL.isEmpty ? nil : selfieURL,
-            addressProofURL: addressProofURL.isEmpty ? nil : addressProofURL,
+            documentFrontData: frontImageData,
+            documentBackData: backImageData,
             status: .pending,
             notes: notes.isEmpty ? nil : notes
         )
@@ -344,6 +355,34 @@ struct KYCSubmissionView: View {
         }
         
         isSubmitting = false
+    }
+
+    private func uploadLabel(title: String, hasImage: Bool) -> some View {
+        HStack {
+            Image(systemName: hasImage ? "checkmark.circle.fill" : "plus.circle")
+                .foregroundStyle(hasImage ? Color.green : Color.white)
+            Text(title)
+            Spacer()
+            if hasImage {
+                Text("Added")
+                    .font(Theme.Fonts.caption())
+                    .foregroundColor(.green)
+            }
+        }
+    }
+    
+    private func imagePreview(for data: Data?) -> AnyView? {
+        guard let data, let uiImage = UIImage(data: data) else { return nil }
+        return AnyView(Image(uiImage: uiImage)
+            .resizable()
+            .scaledToFit()
+            .frame(maxHeight: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 12)))
+    }
+    
+    private func loadImageData(from item: PhotosPickerItem?) async -> Data? {
+        guard let item else { return nil }
+        return try? await item.loadTransferable(type: Data.self)
     }
 }
 

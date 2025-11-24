@@ -76,11 +76,17 @@ struct MainTabView: View {
                 .tabItem {
                     Label("SOCIAL", systemImage: "person.2.fill")
                 }
-            
+
+            ChatListView()
+                .tabItem {
+                    Label("MESSAGES", systemImage: "bubble.left.and.bubble.right.fill")
+                }
+
             ProfileView()
                 .tabItem {
                     Label("PROFILE", systemImage: "person")
                 }
++++++++ REPLACE</parameter>
             
             
             // Promoter tab - only visible for promoters

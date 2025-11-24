@@ -323,21 +323,36 @@ class FirestoreManager {
     // MARK: - KYC
     
     func submitKYC(_ submission: KYCSubmission) async throws {
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             "userId": submission.userId,
             "fullName": submission.fullName,
             "documentType": submission.documentType,
             "documentNumber": submission.documentNumber,
-            "documentFrontURL": submission.documentFrontURL as Any,
-            "documentBackURL": submission.documentBackURL as Any,
-            "selfieURL": submission.selfieURL as Any,
-            "addressProofURL": submission.addressProofURL as Any,
             "status": submission.status.rawValue,
             "notes": submission.notes as Any,
             "submittedAt": Timestamp(date: submission.submittedAt),
             "reviewedBy": submission.reviewedBy as Any,
             "reviewedAt": submission.reviewedAt.map { Timestamp(date: $0) } as Any
         ]
+
+        if let frontData = submission.documentFrontData {
+            data["documentFrontData"] = Blob(data: frontData)
+        }
+        if let backData = submission.documentBackData {
+            data["documentBackData"] = Blob(data: backData)
+        }
+        if let frontURL = submission.documentFrontURL {
+            data["documentFrontURL"] = frontURL
+        }
+        if let backURL = submission.documentBackURL {
+            data["documentBackURL"] = backURL
+        }
+        if let selfieURL = submission.selfieURL {
+            data["selfieURL"] = selfieURL
+        }
+        if let addressProofURL = submission.addressProofURL {
+            data["addressProofURL"] = addressProofURL
+        }
         
         try await db.collection("kycSubmissions").document(submission.id).setData(data)
         try await updateUser(userId: submission.userId, data: ["kycStatus": KYCStatus.pending.rawValue])
@@ -358,6 +373,8 @@ class FirestoreManager {
                 fullName: data["fullName"] as? String ?? "",
                 documentType: data["documentType"] as? String ?? "",
                 documentNumber: data["documentNumber"] as? String ?? "",
+                documentFrontData: (data["documentFrontData"] as? Blob)?.data,
+                documentBackData: (data["documentBackData"] as? Blob)?.data,
                 documentFrontURL: data["documentFrontURL"] as? String,
                 documentBackURL: data["documentBackURL"] as? String,
                 selfieURL: data["selfieURL"] as? String,

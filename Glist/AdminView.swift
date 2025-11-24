@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct AdminView: View {
     @EnvironmentObject var authManager: AuthManager
@@ -231,17 +232,15 @@ struct KYCSubmissionCard: View {
             }
             
             VStack(alignment: .leading, spacing: 6) {
-                if let url = submission.documentFrontURL {
+                if let front = submission.documentFrontData, let image = UIImage(data: front) {
+                    DocumentImageRow(icon: "doc.text.viewfinder", label: "Front of ID", image: image)
+                } else if let url = submission.documentFrontURL {
                     LinkRow(icon: "doc.text.viewfinder", label: "Front of ID", url: url)
                 }
-                if let url = submission.documentBackURL {
+                if let back = submission.documentBackData, let image = UIImage(data: back) {
+                    DocumentImageRow(icon: "doc.viewfinder", label: "Back of ID", image: image)
+                } else if let url = submission.documentBackURL {
                     LinkRow(icon: "doc.viewfinder", label: "Back of ID", url: url)
-                }
-                if let url = submission.selfieURL {
-                    LinkRow(icon: "camera.fill", label: "Selfie / Live photo", url: url)
-                }
-                if let url = submission.addressProofURL {
-                    LinkRow(icon: "house.fill", label: "Address proof", url: url)
                 }
             }
             
@@ -308,6 +307,29 @@ struct LinkRow: View {
                     .font(.caption)
                     .foregroundStyle(.gray)
             }
+        }
+    }
+}
+
+struct DocumentImageRow: View {
+    let icon: String
+    let label: String
+    let image: UIImage
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(.gray)
+                Text(label)
+                    .font(Theme.Fonts.body(size: 12))
+                Spacer()
+            }
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .frame(maxHeight: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 }

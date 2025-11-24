@@ -6,6 +6,8 @@ struct KYCSubmission: Identifiable, Codable {
     let fullName: String
     let documentType: String
     let documentNumber: String
+    let documentFrontData: Data?
+    let documentBackData: Data?
     let documentFrontURL: String?
     let documentBackURL: String?
     let selfieURL: String?
@@ -22,6 +24,8 @@ struct KYCSubmission: Identifiable, Codable {
         fullName: String,
         documentType: String,
         documentNumber: String,
+        documentFrontData: Data? = nil,
+        documentBackData: Data? = nil,
         documentFrontURL: String? = nil,
         documentBackURL: String? = nil,
         selfieURL: String? = nil,
@@ -37,6 +41,8 @@ struct KYCSubmission: Identifiable, Codable {
         self.fullName = fullName
         self.documentType = documentType
         self.documentNumber = documentNumber
+        self.documentFrontData = documentFrontData
+        self.documentBackData = documentBackData
         self.documentFrontURL = documentFrontURL
         self.documentBackURL = documentBackURL
         self.selfieURL = selfieURL
