@@ -1,0 +1,14 @@
+// App Clip Configuration
+PRODUCT_BUNDLE_IDENTIFIER = com.etchmuzik.glist.Clip
+PRODUCT_NAME = LSTDClip
+SUPPORTS_MACCATALYST = NO
+SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO
+
+// Enable additional entitlements for App Clips
+DEVELOPMENT_TEAM = // Replace with your Apple Developer Team ID
+CODE_SIGN_ENTITLEMENTS = Glist/Glist.entitlements
+
+// App Clip specific settings
+PRODUCT_MODULE_NAME = LSTDClip
+SWIFT_VERSION = 5.0
+IPHONEOS_DEPLOYMENT_TARGET = 16.0

@@ -215,7 +215,8 @@ struct ProfileView: View {
                     qrCodeId: request.qrCodeId ?? request.id.uuidString,
                     venueName: request.venueName,
                     guestName: request.name,
-                    date: request.date
+                    date: request.date,
+                    ticket: nil
                 )
                 .presentationDetents([.medium])
             }
@@ -224,7 +225,8 @@ struct ProfileView: View {
                     qrCodeId: ticket.qrCodeId,
                     venueName: ticket.venueName,
                     guestName: authManager.user?.name ?? "Guest",
-                    date: ticket.eventDate
+                    date: ticket.eventDate,
+                    ticket: ticket
                 )
                 .presentationDetents([.medium])
             }
