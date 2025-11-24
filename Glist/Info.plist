@@ -8,6 +8,14 @@
 	</array>
 	<key>CFBundleDisplayName</key>
 	<string>LSTD</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required for QR code scanning to check in guests and verify tickets</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Location access enables venue discovery and check-in verification nearby</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access for uploading profile pictures and venue photos</string>
 	<key>PassServiceBaseURL</key>
 	<string>https://api.example.com/passes</string>
 </dict>
