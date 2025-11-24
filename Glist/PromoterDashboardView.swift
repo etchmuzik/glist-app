@@ -5,6 +5,7 @@ import Combine
 struct PromoterDashboardView: View {
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var promoterManager = PromoterManager()
+    @State private var showKYC = false
     
     var body: some View {
         NavigationStack {
@@ -19,7 +20,7 @@ struct PromoterDashboardView: View {
                         VStack(spacing: 24) {
                             // Earnings Summary
                             VStack(spacing: 16) {
-                                Text("EARNINGS")
+                                Text(LocalizedStringKey("earnings"))
                                     .font(Theme.Fonts.body(size: 12))
                                     .fontWeight(.bold)
                                     .foregroundStyle(.gray)
@@ -46,27 +47,34 @@ struct PromoterDashboardView: View {
                                 PromoterStatCard(
                                     icon: "list.bullet.clipboard",
                                     value: "\(promoterManager.guestLists.count)",
-                                    label: "Active Lists"
+                                    label: LocalizedStringKey("active_lists")
                                 )
                                 
                                 PromoterStatCard(
                                     icon: "dollarsign.circle",
                                     value: "\(promoterManager.commissions.count)",
-                                    label: "Commissions"
+                                    label: LocalizedStringKey("commissions")
                                 )
                                 
                                 PromoterStatCard(
                                     icon: "percent",
                                     value: "\(Int((promoterManager.promoter?.commissionRate ?? 0) * 100))%",
-                                    label: "Rate"
+                                    label: LocalizedStringKey("rate")
                                 )
                             }
                             .padding(.horizontal, 24)
                             
+                            if let promoter = promoterManager.promoter {
+                                PromoterTrustStack(promoter: promoter) {
+                                    showKYC = true
+                                }
+                                    .padding(.horizontal, 24)
+                            }
+                            
                             // Active Guest Lists
                             if !promoterManager.guestLists.isEmpty {
                                 VStack(alignment: .leading, spacing: 16) {
-                                    Text("ACTIVE GUEST LISTS")
+                                    Text(LocalizedStringKey("active_lists"))
                                         .font(Theme.Fonts.body(size: 12))
                                         .fontWeight(.bold)
                                         .foregroundStyle(.gray)
@@ -81,7 +89,7 @@ struct PromoterDashboardView: View {
                             // Recent Commissions
                             if !promoterManager.commissions.isEmpty {
                                 VStack(alignment: .leading, spacing: 16) {
-                                    Text("RECENT COMMISSIONS")
+                                    Text(LocalizedStringKey("recent_commissions"))
                                         .font(Theme.Fonts.body(size: 12))
                                         .fontWeight(.bold)
                                         .foregroundStyle(.gray)
@@ -98,7 +106,7 @@ struct PromoterDashboardView: View {
                     }
                 }
             }
-            .navigationTitle("PROMOTER DASHBOARD")
+            .navigationTitle(LocalizedStringKey("promoter_dashboard"))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if let userId = authManager.user?.id {
@@ -106,6 +114,9 @@ struct PromoterDashboardView: View {
                         await promoterManager.fetchPromoterData(userId: userId)
                     }
                 }
+            }
+            .sheet(isPresented: $showKYC) {
+                KYCSubmissionView()
             }
         }
     }
@@ -115,6 +126,7 @@ struct EarningsCard: View {
     let title: String
     let amount: Double
     let color: Color
+    @Environment(\.locale) private var locale
     
     var body: some View {
         VStack(spacing: 8) {
@@ -122,7 +134,7 @@ struct EarningsCard: View {
                 .font(Theme.Fonts.body(size: 10))
                 .foregroundStyle(.gray)
             
-            Text("$\(Int(amount))")
+            Text(CurrencyFormatter.aed(amount, locale: locale))
                 .font(Theme.Fonts.display(size: 28))
                 .foregroundStyle(color)
         }
@@ -136,7 +148,7 @@ struct EarningsCard: View {
 struct PromoterStatCard: View {
     let icon: String
     let value: String
-    let label: String
+    let label: LocalizedStringKey
     
     var body: some View {
         VStack(spacing: 8) {
@@ -207,6 +219,7 @@ struct PromoterGuestListCard: View {
 
 struct CommissionRow: View {
     let commission: Commission
+    @Environment(\.locale) private var locale
     
     var body: some View {
         HStack(spacing: 12) {
@@ -224,18 +237,93 @@ struct CommissionRow: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                Text("$\(Int(commission.amount))")
+                Text(CurrencyFormatter.aed(commission.amount, locale: locale))
                     .font(Theme.Fonts.body(size: 16))
                     .fontWeight(.bold)
                     .foregroundStyle(.green)
                 
-                Text(commission.status.rawValue)
-                    .font(Theme.Fonts.body(size: 10))
-                    .foregroundStyle(commission.status == .paid ? .green : .orange)
-            }
+            Text(commission.status.rawValue)
+                .font(Theme.Fonts.body(size: 10))
+                .foregroundStyle(commission.status == .paid ? .green : .orange)
+        }
         }
         .padding(12)
         .background(Color.theme.surface.opacity(0.5))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+struct PromoterTrustStack: View {
+    let promoter: Promoter
+    let onStartKYC: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("TRUST & SAFETY")
+                .font(Theme.Fonts.body(size: 12))
+                .fontWeight(.bold)
+                .foregroundStyle(.gray)
+            
+            HStack(spacing: 12) {
+                KYCStatusCard(status: promoter.kycStatus, onTap: onStartKYC)
+                PromoterReputationCard(score: promoter.reputationScore)
+            }
+        }
+    }
+}
+
+struct KYCStatusCard: View {
+    let status: KYCStatus
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 8) {
+                Label(status.badgeText.uppercased(), systemImage: "person.text.rectangle")
+                    .font(Theme.Fonts.body(size: 12))
+                    .fontWeight(.bold)
+                    .foregroundStyle(status.badgeColor)
+                    .lineLimit(2)
+                
+                Text(status == .verified ? "Identity verified for payouts" : "Start verification to unlock payouts and higher limits.")
+                    .font(Theme.Fonts.body(size: 11))
+                    .foregroundStyle(.gray)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(14)
+        .background(Color.theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct PromoterReputationCard: View {
+    let score: Int
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("REPUTATION")
+                    .font(Theme.Fonts.body(size: 12))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.gray)
+                Spacer()
+                Text("\(score)/100")
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.white)
+            }
+            
+            ProgressView(value: Double(score), total: 100)
+                .tint(score >= 80 ? .green : .orange)
+            
+            Text(score >= 80 ? "Guests trust your lists. Keep confirmations on-time." : "Respond faster and avoid cancellations to improve.")
+                .font(Theme.Fonts.body(size: 11))
+                .foregroundStyle(.gray)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

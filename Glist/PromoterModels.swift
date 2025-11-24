@@ -8,9 +8,11 @@ struct Promoter: Identifiable, Codable {
     var venueIds: [String] // Venues they can promote
     var totalEarnings: Double
     var activeGuestLists: Int
+    var reputationScore: Int
+    var kycStatus: KYCStatus
     var createdAt: Date
     
-    init(id: String = UUID().uuidString, userId: String, name: String, commissionRate: Double = 0.10, venueIds: [String] = [], totalEarnings: Double = 0, activeGuestLists: Int = 0, createdAt: Date = Date()) {
+    init(id: String = UUID().uuidString, userId: String, name: String, commissionRate: Double = 0.10, venueIds: [String] = [], totalEarnings: Double = 0, activeGuestLists: Int = 0, reputationScore: Int = 80, kycStatus: KYCStatus = .pending, createdAt: Date = Date()) {
         self.id = id
         self.userId = userId
         self.name = name
@@ -18,6 +20,8 @@ struct Promoter: Identifiable, Codable {
         self.venueIds = venueIds
         self.totalEarnings = totalEarnings
         self.activeGuestLists = activeGuestLists
+        self.reputationScore = reputationScore
+        self.kycStatus = kycStatus
         self.createdAt = createdAt
     }
 }

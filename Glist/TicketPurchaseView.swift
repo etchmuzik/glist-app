@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct TicketPurchaseView: View {
     let venue: Venue
@@ -8,6 +9,7 @@ struct TicketPurchaseView: View {
     
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
+    @Environment(\.locale) private var locale
     @StateObject private var ticketManager = TicketManager()
     @StateObject private var paymentManager = PaymentManager()
     
@@ -15,24 +17,23 @@ struct TicketPurchaseView: View {
     @State private var showSuccess = false
     @State private var errorMessage: String?
     @State private var transactionId: String?
+    @State private var pkPassData: Data?
     
-    var totalAmount: Double {
-        ticketType.price * Double(quantity)
-    }
+    var totalAmount: Double { ticketType.price * Double(quantity) }
     
     var body: some View {
         ZStack {
             Color.theme.background.ignoresSafeArea()
             
             if showSuccess {
-                TicketSuccessView(transactionId: transactionId)
+                TicketSuccessView(transactionId: transactionId, pkPassData: pkPassData)
             } else {
-                VStack(spacing: 24) {
-                    // Summary Card
-                    VStack(spacing: 20) {
-                        Text("ORDER SUMMARY")
-                            .font(Theme.Fonts.body(size: 12))
-                            .fontWeight(.bold)
+                    VStack(spacing: 24) {
+                        // Summary Card
+                        VStack(spacing: 20) {
+                            Text("ORDER SUMMARY")
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
                             .foregroundStyle(.gray)
                         
                         VStack(spacing: 8) {
@@ -70,7 +71,7 @@ struct TicketPurchaseView: View {
                             Text("Price per Ticket")
                                 .foregroundStyle(.gray)
                             Spacer()
-                            Text("$\(Int(ticketType.price))")
+                            Text(CurrencyFormatter.aed(ticketType.price, locale: locale))
                                 .foregroundStyle(.white)
                         }
                         .font(Theme.Fonts.body(size: 14))
@@ -83,7 +84,7 @@ struct TicketPurchaseView: View {
                                 .fontWeight(.bold)
                                 .foregroundStyle(.white)
                             Spacer()
-                            Text("$\(Int(totalAmount))")
+                            Text(CurrencyFormatter.aed(totalAmount, locale: locale))
                                 .fontWeight(.bold)
                                 .foregroundStyle(.white)
                         }
@@ -154,7 +155,7 @@ struct TicketPurchaseView: View {
                 )
                 
                 // If payment succeeds, create tickets
-                try await ticketManager.purchaseTicket(
+                let createdTickets = try await ticketManager.purchaseTicket(
                     userId: userId,
                     event: event,
                     venue: venue,
@@ -162,8 +163,14 @@ struct TicketPurchaseView: View {
                     quantity: quantity
                 )
                 
+                var passData: Data? = nil
+                if let firstTicket = createdTickets.first {
+                    passData = try await ticketManager.fetchPass(for: firstTicket)
+                }
+                
                 await MainActor.run {
                     transactionId = txnId
+                    pkPassData = passData
                     isProcessing = false
                     withAnimation {
                         showSuccess = true
@@ -186,7 +193,9 @@ struct TicketPurchaseView: View {
 
 struct TicketSuccessView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     let transactionId: String?
+    let pkPassData: Data?
     
     var body: some View {
         VStack(spacing: 24) {
@@ -215,6 +224,24 @@ struct TicketSuccessView: View {
                 }
             }
             
+            if pkPassData != nil {
+                Button {
+                    presentPass()
+                } label: {
+                    HStack {
+                        Image(systemName: "wallet.pass")
+                        Text("Add to Apple Wallet")
+                    }
+                    .font(Theme.Fonts.body(size: 14))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 14)
+                    .background(Color.white)
+                    .clipShape(Capsule())
+                }
+            }
+            
             Button {
                 // Dismiss all the way to root or venue detail
                 // For now, just dismiss this sheet/view
@@ -231,6 +258,18 @@ struct TicketSuccessView: View {
                     .clipShape(Capsule())
             }
             .padding(.top, 20)
+        }
+        .onChange(of: scenePhase) { _, _ in }
+    }
+    
+    private func presentPass() {
+        guard let data = pkPassData else { return }
+        if let top = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow })?
+            .rootViewController {
+            AppleWalletManager.presentPass(from: data, in: top)
         }
     }
 }

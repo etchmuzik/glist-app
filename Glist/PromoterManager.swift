@@ -40,9 +40,31 @@ class PromoterManager: ObservableObject {
             print("Error fetching promoter data: \(error)")
             await MainActor.run {
                 isLoading = false
+        }
+    }
+    
+    func updateReputation(promoterId: String, newScore: Int, venueId: String? = nil, reason: String = "manual_adjust") async throws {
+        let promoterRef = db.collection("promoters").document(promoterId)
+        try await promoterRef.updateData(["reputationScore": newScore])
+        
+        let event = SafetyEvent(
+            type: .promoterReputationChange,
+            userId: nil,
+            promoterId: promoterId,
+            venueId: venueId,
+            previousValue: "\(promoter?.reputationScore ?? 0)",
+            newValue: "\(newScore)",
+            metadata: ["reason": reason]
+        )
+        try await FirestoreManager.shared.logSafetyEvent(event)
+        
+        if promoter?.id == promoterId {
+            await MainActor.run {
+                self.promoter?.reputationScore = newScore
             }
         }
     }
+}
     
     private func fetchPromoter(userId: String) async throws -> Promoter? {
         let snapshot = try await db.collection("promoters")
@@ -52,17 +74,19 @@ class PromoterManager: ObservableObject {
         guard let doc = snapshot.documents.first else { return nil }
         let data = doc.data()
         
-        return Promoter(
-            id: doc.documentID,
-            userId: data["userId"] as? String ?? "",
-            name: data["name"] as? String ?? "",
-            commissionRate: data["commissionRate"] as? Double ?? 0.10,
-            venueIds: data["venueIds"] as? [String] ?? [],
-            totalEarnings: data["totalEarnings"] as? Double ?? 0,
-            activeGuestLists: data["activeGuestLists"] as? Int ?? 0,
-            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
-        )
-    }
+            return Promoter(
+                id: doc.documentID,
+                userId: data["userId"] as? String ?? "",
+                name: data["name"] as? String ?? "",
+                commissionRate: data["commissionRate"] as? Double ?? 0.10,
+                venueIds: data["venueIds"] as? [String] ?? [],
+                totalEarnings: data["totalEarnings"] as? Double ?? 0,
+                activeGuestLists: data["activeGuestLists"] as? Int ?? 0,
+                reputationScore: data["reputationScore"] as? Int ?? 80,
+                kycStatus: KYCStatus(rawValue: data["kycStatus"] as? String ?? "") ?? .pending,
+                createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+            )
+        }
     
     private func fetchCommissions(promoterId: String) async throws {
         let snapshot = try await db.collection("commissions")

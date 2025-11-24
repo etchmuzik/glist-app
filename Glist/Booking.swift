@@ -2,6 +2,11 @@ import Foundation
 
 enum BookingStatus: String, Codable {
     case pending = "Pending"
+    case holdPending = "Hold Pending"
+    case confirmed = "Confirmed"
+    case waitlisted = "Waitlisted"
+    case autoPromoted = "Auto Promoted"
+    case expired = "Expired"
     case paid = "Paid"
     case cancelled = "Cancelled"
 }

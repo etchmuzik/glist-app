@@ -2,9 +2,18 @@ import SwiftUI
 
 struct BookingCard: View {
     let booking: Booking
+    @Environment(\.locale) private var locale
     
     var statusColor: Color {
         switch booking.status {
+        case .holdPending:
+            return .orange
+        case .confirmed, .autoPromoted:
+            return .green
+        case .waitlisted:
+            return .yellow
+        case .expired:
+            return .gray
         case .paid:
             return .green
         case .pending:
@@ -59,7 +68,7 @@ struct BookingCard: View {
                     Image(systemName: "dollarsign.circle")
                         .font(.caption)
                         .foregroundStyle(.gray)
-                    Text("$\(Int(booking.depositAmount)) deposit")
+                    Text("\(CurrencyFormatter.aed(booking.depositAmount, locale: locale)) deposit")
                         .font(Theme.Fonts.body(size: 12))
                         .foregroundStyle(.gray)
                 }

@@ -4,6 +4,7 @@ import AVFoundation
 struct QRScannerView: UIViewControllerRepresentable {
     @Binding var scannedCode: String?
     @Environment(\.dismiss) var dismiss
+    var onScan: ((String) -> Void)?
     
     func makeUIViewController(context: Context) -> ScannerViewController {
         let controller = ScannerViewController()
@@ -26,6 +27,7 @@ struct QRScannerView: UIViewControllerRepresentable {
         
         func didScan(code: String) {
             parent.scannedCode = code
+            parent.onScan?(code)
             parent.dismiss()
         }
         

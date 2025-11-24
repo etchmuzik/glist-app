@@ -25,8 +25,9 @@ class TicketManager: ObservableObject {
         }
     }
     
-    func purchaseTicket(userId: String, event: Event, venue: Venue, ticketType: TicketType, quantity: Int) async throws {
-        // Create tickets based on quantity
+    func purchaseTicket(userId: String, event: Event, venue: Venue, ticketType: TicketType, quantity: Int) async throws -> [EventTicket] {
+        var created: [EventTicket] = []
+        
         for _ in 0..<quantity {
             let newTicket = EventTicket(
                 id: UUID(),
@@ -45,9 +46,19 @@ class TicketManager: ObservableObject {
             )
             
             try await FirestoreManager.shared.createTicket(newTicket)
+            created.append(newTicket)
+            
+            // Award Loyalty Points
+            try await FirestoreManager.shared.addRewardPoints(userId: userId, points: LoyaltyManager.pointsPerTicket)
         }
         
         // Refresh tickets
         fetchUserTickets(userId: userId)
+        return created
+    }
+    
+    /// Fetch a signed .pkpass for the given ticket from the backend.
+    func fetchPass(for ticket: EventTicket) async throws -> Data? {
+        try await PassService.shared.fetchPass(ticketId: ticket.id)
     }
 }

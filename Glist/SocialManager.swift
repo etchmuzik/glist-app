@@ -4,6 +4,7 @@ import Combine
 import FirebaseFirestore
 
 class SocialManager: ObservableObject {
+    static let shared = SocialManager()
     @Published var followingUsers: [User] = []
     @Published var followerUsers: [User] = []
     @Published var searchResults: [User] = []
@@ -130,4 +131,104 @@ class SocialManager: ObservableObject {
             print("Error fetching friends going: \(error)")
         }
     }
+    // MARK: - Friend Requests
+    
+    func sendFriendRequest(currentUserId: String, targetUser: User) async throws {
+        if targetUser.isPrivate {
+            let request = FriendRequest(
+                fromUserId: currentUserId,
+                toUserId: targetUser.id,
+                status: .pending,
+                createdAt: Date()
+            )
+            try await db.collection("friend_requests").addDocument(from: request)
+        } else {
+            try await followUser(currentUserId: currentUserId, targetUserId: targetUser.id)
+        }
+    }
+    
+    func fetchPendingRequests(for userId: String) async throws -> [FriendRequest] {
+        let snapshot = try await db.collection("friend_requests")
+            .whereField("toUserId", isEqualTo: userId)
+            .whereField("status", isEqualTo: RequestStatus.pending.rawValue)
+            .getDocuments()
+        
+        return try snapshot.documents.compactMap { try $0.data(as: FriendRequest.self) }
+    }
+    
+    func acceptRequest(_ request: FriendRequest) async throws {
+        // 1. Perform the follow (bi-directional or uni-directional depending on app logic, assuming uni-directional follow here but approved)
+        try await followUser(currentUserId: request.fromUserId, targetUserId: request.toUserId)
+        
+        // 2. Update request status
+        if let id = request.id {
+            try await db.collection("friend_requests").document(id).updateData(["status": RequestStatus.accepted.rawValue])
+        }
+    }
+    
+    func declineRequest(_ request: FriendRequest) async throws {
+        if let id = request.id {
+            try await db.collection("friend_requests").document(id).updateData(["status": RequestStatus.declined.rawValue])
+        }
+    }
+    
+    // MARK: - Activity Feed
+    
+    func logActivity(userId: String, type: ActivityType, title: String, subtitle: String, relatedId: String?) {
+        let activity = ActivityItem(
+            userId: userId,
+            type: type,
+            title: title,
+            subtitle: subtitle,
+            relatedId: relatedId,
+            timestamp: Date()
+        )
+        try? db.collection("activities").addDocument(from: activity)
+    }
+    
+    func fetchActivityFeed(followingUserIds: [String]) async throws -> [ActivityItem] {
+        guard !followingUserIds.isEmpty else { return [] }
+        
+        // Firestore 'in' query is limited to 10 items. For real apps, we'd use a different approach (fan-out or multiple queries).
+        // For now, we'll just fetch recent activities and filter in memory or limit to first 10 friends.
+        
+        let snapshot = try await db.collection("activities")
+            .whereField("userId", in: Array(followingUserIds.prefix(10)))
+            .order(by: "timestamp", descending: true)
+            .limit(to: 20)
+            .getDocuments()
+            
+        return try snapshot.documents.compactMap { try $0.data(as: ActivityItem.self) }
+    }
+}
+
+// MARK: - Models
+
+struct FriendRequest: Identifiable, Codable {
+    @DocumentID var id: String?
+    let fromUserId: String
+    let toUserId: String
+    let status: RequestStatus
+    let createdAt: Date
+}
+
+enum RequestStatus: String, Codable {
+    case pending, accepted, declined
+}
+
+struct ActivityItem: Identifiable, Codable {
+    @DocumentID var id: String?
+    let userId: String
+    let type: ActivityType
+    let title: String
+    let subtitle: String
+    let relatedId: String? // e.g., venueId
+    let timestamp: Date
+}
+
+enum ActivityType: String, Codable {
+    case booking
+    case guestList
+    case review
+    case follow
 }

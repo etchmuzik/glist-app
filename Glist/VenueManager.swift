@@ -45,22 +45,26 @@ class VenueManager: ObservableObject {
                     self.venues = VenueData.dubaiVenues
                 } else {
                     // Parse Firestore documents
-                    self.venues = documents.compactMap { doc -> Venue? in
-                        let data = doc.data()
-                        var venue = Venue(
-                            name: data["name"] as? String ?? "",
-                            type: data["type"] as? String ?? "",
-                            location: data["location"] as? String ?? "",
-                            description: data["description"] as? String ?? "",
-                            rating: data["rating"] as? Double ?? 0.0,
-                            price: data["price"] as? String ?? "",
-                            dressCode: data["dressCode"] as? String ?? "",
-                            imageName: data["imageName"] as? String ?? "",
-                            tags: data["tags"] as? [String] ?? [],
-                            latitude: data["latitude"] as? Double ?? 25.2048, // Default to Dubai
-                            longitude: data["longitude"] as? Double ?? 55.2708,
-                            events: []
-                        )
+                        self.venues = documents.compactMap { doc -> Venue? in
+                            let data = doc.data()
+                            var venue = Venue(
+                                name: data["name"] as? String ?? "",
+                                type: data["type"] as? String ?? "",
+                                location: data["location"] as? String ?? "",
+                                district: DubaiDistrict(rawValue: data["district"] as? String ?? "") ?? .unknown,
+                                description: data["description"] as? String ?? "",
+                                rating: data["rating"] as? Double ?? 0.0,
+                                price: data["price"] as? String ?? "",
+                                dressCode: data["dressCode"] as? String ?? "",
+                                imageName: data["imageName"] as? String ?? "",
+                                tags: data["tags"] as? [String] ?? [],
+                                latitude: data["latitude"] as? Double ?? 25.2048, // Default to Dubai
+                                longitude: data["longitude"] as? Double ?? 55.2708,
+                                events: [],
+                                isVerified: data["isVerified"] as? Bool ?? false,
+                                minimumAge: data["minimumAge"] as? Int ?? 21,
+                                safetyMessage: data["safetyMessage"] as? String
+                            )
                         
                         // Set the ID from Firestore document ID
                         if let firestoreId = UUID(uuidString: doc.documentID) {

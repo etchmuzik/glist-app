@@ -261,13 +261,138 @@ class FirestoreManager {
     }
     
     func updateUser(userId: String, data: [String: Any]) async throws {
+        var previousKYCStatus: String?
+        var newKYCStatus: String?
+        
+        if let incomingStatus = data["kycStatus"] as? String {
+            let existing = try await db.collection("users").document(userId).getDocument()
+            previousKYCStatus = existing.data()?["kycStatus"] as? String
+            newKYCStatus = incomingStatus
+        }
+        
         try await db.collection("users").document(userId).updateData(data)
+        
+        if let newKYCStatus, previousKYCStatus != newKYCStatus {
+            let event = SafetyEvent(
+                type: .kycStatusChange,
+                userId: userId,
+                previousValue: previousKYCStatus,
+                newValue: newKYCStatus,
+                metadata: ["source": "user_update"]
+            )
+            try await logSafetyEvent(event)
+        }
     }
     
     func updateNotificationPreferences(userId: String, data: [String: Any]) async throws {
         try await db.collection("users").document(userId).updateData([
             "notificationPreferences": data
         ])
+    }
+    
+    // MARK: - Referral System
+    
+    func checkReferralCode(code: String) async throws -> String? {
+        let snapshot = try await db.collection("users")
+            .whereField("referralCode", isEqualTo: code)
+            .getDocuments()
+        
+        return snapshot.documents.first?.documentID
+    }
+    
+    func processReferral(newUserId: String, referrerId: String) async throws {
+        let batch = db.batch()
+        
+        let newUserRef = db.collection("users").document(newUserId)
+        batch.updateData(["referredBy": referrerId], forDocument: newUserRef)
+        
+        let referrerRef = db.collection("users").document(referrerId)
+        batch.updateData([
+            "rewardPoints": FieldValue.increment(Int64(500)),
+            "lifetimePoints": FieldValue.increment(Int64(500))
+        ], forDocument: referrerRef)
+        
+        batch.updateData([
+            "rewardPoints": FieldValue.increment(Int64(200)),
+            "lifetimePoints": FieldValue.increment(Int64(200))
+        ], forDocument: newUserRef)
+        
+        try await batch.commit()
+    }
+    
+    // MARK: - KYC
+    
+    func submitKYC(_ submission: KYCSubmission) async throws {
+        let data: [String: Any] = [
+            "userId": submission.userId,
+            "fullName": submission.fullName,
+            "documentType": submission.documentType,
+            "documentNumber": submission.documentNumber,
+            "documentFrontURL": submission.documentFrontURL as Any,
+            "documentBackURL": submission.documentBackURL as Any,
+            "selfieURL": submission.selfieURL as Any,
+            "addressProofURL": submission.addressProofURL as Any,
+            "status": submission.status.rawValue,
+            "notes": submission.notes as Any,
+            "submittedAt": Timestamp(date: submission.submittedAt),
+            "reviewedBy": submission.reviewedBy as Any,
+            "reviewedAt": submission.reviewedAt.map { Timestamp(date: $0) } as Any
+        ]
+        
+        try await db.collection("kycSubmissions").document(submission.id).setData(data)
+        try await updateUser(userId: submission.userId, data: ["kycStatus": KYCStatus.pending.rawValue])
+    }
+    
+    func fetchKYCSubmissions(status: KYCStatus? = nil, limit: Int = 50) async throws -> [KYCSubmission] {
+        var query: Query = db.collection("kycSubmissions").order(by: "submittedAt", descending: true).limit(to: limit)
+        if let status {
+            query = query.whereField("status", isEqualTo: status.rawValue)
+        }
+        
+        let snapshot = try await query.getDocuments()
+        return snapshot.documents.compactMap { doc in
+            let data = doc.data()
+            return KYCSubmission(
+                id: doc.documentID,
+                userId: data["userId"] as? String ?? "",
+                fullName: data["fullName"] as? String ?? "",
+                documentType: data["documentType"] as? String ?? "",
+                documentNumber: data["documentNumber"] as? String ?? "",
+                documentFrontURL: data["documentFrontURL"] as? String,
+                documentBackURL: data["documentBackURL"] as? String,
+                selfieURL: data["selfieURL"] as? String,
+                addressProofURL: data["addressProofURL"] as? String,
+                status: KYCStatus(rawValue: data["status"] as? String ?? KYCStatus.pending.rawValue) ?? .pending,
+                notes: data["notes"] as? String,
+                submittedAt: (data["submittedAt"] as? Timestamp)?.dateValue() ?? Date(),
+                reviewedBy: data["reviewedBy"] as? String,
+                reviewedAt: (data["reviewedAt"] as? Timestamp)?.dateValue()
+            )
+        }
+    }
+    
+    func updateKYCSubmissionStatus(submissionId: String, userId: String, status: KYCStatus, reviewerId: String?, notes: String? = nil) async throws {
+        let updates: [String: Any] = [
+            "status": status.rawValue,
+            "reviewedBy": reviewerId as Any,
+            "reviewedAt": Timestamp(date: Date()),
+            "notes": notes as Any
+        ]
+        
+        try await db.collection("kycSubmissions").document(submissionId).updateData(updates)
+        try await updateUser(userId: userId, data: ["kycStatus": status.rawValue])
+        
+        let event = SafetyEvent(
+            type: .kycStatusChange,
+            userId: userId,
+            previousValue: nil,
+            newValue: status.rawValue,
+            metadata: [
+                "source": "admin_review",
+                "submissionId": submissionId
+            ]
+        )
+        try await logSafetyEvent(event)
     }
     
     // MARK: - Rewards & Bans
@@ -299,7 +424,74 @@ class FirestoreManager {
     }
     
     func incrementNoShowCount(userId: String) async throws {
+        // Policy: soft ban after 2 no-shows for 7 days, hard ban after 4.
+        let softBanThreshold = 2
+        let softBanDays: Double = 7
+        let hardBanThreshold = 4
+
         let userRef = db.collection("users").document(userId)
+        var resultingCount: Int = 0
+        try await db.runTransaction({ (transaction, errorPointer) -> Any? in
+            let userDocument: DocumentSnapshot
+            do {
+                try userDocument = transaction.getDocument(userRef)
+            } catch let fetchError as NSError {
+                errorPointer?.pointee = fetchError
+                return nil
+            }
+
+            guard let noShowCount = userDocument.data()? ["noShowCount"] as? Int else {
+                let error = NSError(
+                    domain: "AppErrorDomain",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Unable to retrieve noShowCount from snapshot \(userDocument)"]
+                )
+                errorPointer?.pointee = error
+                return nil
+            }
+
+            let newCount = noShowCount + 1
+            let existingSoftBanUntil = (userDocument.data()? ["softBanUntil"] as? Timestamp)?.dateValue()
+            var updates: [String: Any] = ["noShowCount": newCount]
+
+            if newCount >= softBanThreshold {
+                let proposedLift = Date().addingTimeInterval(60 * 60 * 24 * softBanDays)
+                if let currentSoftBanUntil = existingSoftBanUntil {
+                    updates["softBanUntil"] = Timestamp(date: max(currentSoftBanUntil, proposedLift))
+                } else {
+                    updates["softBanUntil"] = Timestamp(date: proposedLift)
+                }
+                // TODO: trigger alert/email to the user about pause window.
+            }
+
+            if newCount >= hardBanThreshold {
+                updates["isBanned"] = true
+            }
+            resultingCount = newCount
+
+            transaction.updateData(updates, forDocument: userRef)
+            return nil
+        })
+
+        let event = SafetyEvent(
+            type: .noShowIncrement,
+            userId: userId,
+            previousValue: "\(resultingCount - 1)",
+            newValue: "\(resultingCount)",
+            metadata: [
+                "reason": "guest_list_no_show",
+                "soft_ban_applied": resultingCount >= softBanThreshold ? "true" : "false",
+                "hard_ban_applied": resultingCount >= hardBanThreshold ? "true" : "false"
+            ]
+        )
+        try await logSafetyEvent(event)
+    }
+    
+    // MARK: - Streak System
+    
+    func updateStreak(userId: String) async throws {
+        let userRef = db.collection("users").document(userId)
+        
         try await db.runTransaction({ (transaction, errorPointer) -> Any? in
             let userDocument: DocumentSnapshot
             do {
@@ -309,24 +501,35 @@ class FirestoreManager {
                 return nil
             }
             
-            guard let noShowCount = userDocument.data()?["noShowCount"] as? Int else {
-                let error = NSError(
-                    domain: "AppErrorDomain",
-                    code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Unable to retrieve noShowCount from snapshot \(userDocument)"]
-                )
-                errorPointer?.pointee = error
+            guard let lastVisitTimestamp = userDocument.data()?["lastVisitDate"] as? Timestamp else {
+                transaction.updateData([
+                    "currentStreak": 1,
+                    "lastVisitDate": Timestamp(date: Date())
+                ], forDocument: userRef)
                 return nil
             }
             
-            let newCount = noShowCount + 1
-            var updates: [String: Any] = ["noShowCount": newCount]
+            let lastVisitDate = lastVisitTimestamp.dateValue()
+            let calendar = Calendar.current
             
-            if newCount >= 5 {
-                updates["isBanned"] = true
+            if calendar.isDateInToday(lastVisitDate) {
+                return nil
             }
             
-            transaction.updateData(updates, forDocument: userRef)
+            let components = calendar.dateComponents([.day], from: lastVisitDate, to: Date())
+            
+            if let days = components.day, days <= 7 {
+                transaction.updateData([
+                    "currentStreak": FieldValue.increment(Int64(1)),
+                    "lastVisitDate": Timestamp(date: Date())
+                ], forDocument: userRef)
+            } else {
+                transaction.updateData([
+                    "currentStreak": 1,
+                    "lastVisitDate": Timestamp(date: Date())
+                ], forDocument: userRef)
+            }
+            
             return nil
         })
     }
@@ -370,6 +573,23 @@ class FirestoreManager {
                 createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
             )
         }
+    }
+    
+    // MARK: - Safety Event Logging
+    
+    func logSafetyEvent(_ event: SafetyEvent) async throws {
+        var data: [String: Any] = [
+            "type": event.type.rawValue,
+            "createdAt": Timestamp(date: event.createdAt),
+            "metadata": event.metadata
+        ]
+        data["userId"] = event.userId
+        data["promoterId"] = event.promoterId
+        data["venueId"] = event.venueId
+        data["previousValue"] = event.previousValue
+        data["newValue"] = event.newValue
+        
+        try await db.collection("safetyEvents").document(event.id).setData(data)
     }
     
     // MARK: - Tickets

@@ -7,6 +7,7 @@ struct VenueMapView: View {
     @EnvironmentObject var authManager: AuthManager
     
     @StateObject private var locationManager = LocationManager()
+    @State private var selectedDistrict: DubaiDistrict?
     
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -17,13 +18,18 @@ struct VenueMapView: View {
     
     @State private var selectedVenue: Venue?
     
+    private var filteredVenues: [Venue] {
+        guard let district = selectedDistrict else { return venueManager.venues }
+        return venueManager.venues.filter { $0.district == district }
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Map(position: $position, selection: $selectedVenue) {
                     UserAnnotation(location: locationManager.location)
                     
-                    ForEach(venueManager.venues) { venue in
+                    ForEach(filteredVenues) { venue in
                         Annotation(venue.name, coordinate: venue.coordinate) {
                             VenueMarker(venue: venue, friendsAtVenue: socialManager.getFriendsAt(venueId: venue.id.uuidString))
                                 .onTapGesture {
@@ -40,6 +46,29 @@ struct VenueMapView: View {
                     MapScaleView()
                 }
                 .ignoresSafeArea()
+                
+                // District filters
+                VStack {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            FilterChip(title: "All", isSelected: selectedDistrict == nil) {
+                                selectedDistrict = nil
+                            }
+                            ForEach(DubaiDistrict.allCases.filter { $0 != .unknown }, id: \.self) { district in
+                                FilterChip(title: district.displayName, isSelected: selectedDistrict == district) {
+                                    selectedDistrict = district
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                        .padding(.top, 12)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
                 
                 // Overlay for selected venue
                 if let venue = selectedVenue {
@@ -64,6 +93,31 @@ struct VenueMapView: View {
                 }
             }
         }
+    }
+}
+
+// Shared chip used across list and map
+struct FilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(Theme.Fonts.body(size: 12))
+                .fontWeight(.bold)
+                .foregroundStyle(isSelected ? .black : .white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color.white : Color.theme.surface.opacity(0.6))
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.2), lineWidth: isSelected ? 0 : 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 

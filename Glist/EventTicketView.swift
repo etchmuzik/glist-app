@@ -103,7 +103,7 @@ struct EventTicketView: View {
                                     Text("TOTAL")
                                         .font(Theme.Fonts.body(size: 12))
                                         .foregroundStyle(.gray)
-                                    Text("$\(Int(selected.price) * quantity)")
+                                    Text(CurrencyFormatter.aed(selected.price * Double(quantity)))
                                         .font(Theme.Fonts.display(size: 24))
                                         .foregroundStyle(.white)
                                 }
@@ -132,11 +132,11 @@ struct EventTicketView: View {
                     }
                 }
             }
-            .navigationTitle("Tickets")
+            .navigationTitle(LocalizedStringKey("tickets_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                    Button(LocalizedStringKey("close")) {
                         dismiss()
                     }
                 }
@@ -159,6 +159,7 @@ struct TicketTypeCard: View {
     let ticketType: TicketType
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.locale) private var locale
     
     var body: some View {
         Button(action: action) {
@@ -179,7 +180,7 @@ struct TicketTypeCard: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("$\(Int(ticketType.price))")
+                    Text(CurrencyFormatter.aed(ticketType.price, locale: locale))
                         .font(Theme.Fonts.display(size: 18))
                         .foregroundStyle(Color.theme.accent)
                     

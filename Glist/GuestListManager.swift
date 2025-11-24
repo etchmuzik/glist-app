@@ -86,6 +86,15 @@ class GuestListManager: ObservableObject {
         
         // Save to Firestore
         try await FirestoreManager.shared.submitGuestListRequest(newRequest)
+        
+        // Log Activity
+        SocialManager.shared.logActivity(
+            userId: userId,
+            type: .guestList,
+            title: "Joined Guest List",
+            subtitle: "at \(venueName)",
+            relatedId: venueId
+        )
     }
     
     deinit {

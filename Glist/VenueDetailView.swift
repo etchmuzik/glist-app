@@ -9,6 +9,10 @@ struct VenueDetailView: View {
     @State private var showTableBooking = false
     @State private var selectedEvent: Event?
     
+    private var isUserRestricted: Bool {
+        authManager.user?.isBanned == true || authManager.user?.isSoftBanned == true
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -44,6 +48,10 @@ struct VenueDetailView: View {
                                 .font(Theme.Fonts.display(size: 32))
                                 .foregroundStyle(Color.theme.textPrimary)
                             
+                            if venue.isVerified {
+                                VerifiedBadge(text: NSLocalizedString("verified_venue", comment: ""))
+                            }
+                            
                             Spacer()
                             
                             FavoriteButton(venueId: venue.id)
@@ -69,11 +77,25 @@ struct VenueDetailView: View {
                     
                     // Action Buttons
                     VStack(spacing: 12) {
+                        if let user = authManager.user {
+                            if user.isBanned {
+                                SafetyCallout(
+                                    title: NSLocalizedString("account_restricted", comment: ""),
+                                    message: NSLocalizedString("account_restricted_msg", comment: "")
+                                )
+                            } else if user.isSoftBanned, let softBanUntil = user.softBanUntil {
+                                SafetyCallout(
+                                    title: NSLocalizedString("cooling_off_period", comment: ""),
+                                    message: "You can browse venues, but bookings resume after \(softBanUntil.formatted(date: .abbreviated, time: .omitted)). No-show count: \(user.noShowCount)."
+                                )
+                            }
+                        }
+                        
                         HStack(spacing: 12) {
                             Button {
                                 showGuestListSheet = true
                             } label: {
-                                Text("JOIN GUEST LIST")
+                                Text(LocalizedStringKey("join_guest_list"))
                                     .font(Theme.Fonts.body(size: 14))
                                     .fontWeight(.bold)
                                     .foregroundStyle(Color.black)
@@ -82,11 +104,12 @@ struct VenueDetailView: View {
                                     .background(Color.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 0))
                             }
+                            .disabled(isUserRestricted)
                             
                             Button {
                                 showTableBooking = true
                             } label: {
-                                Text("BOOK A TABLE")
+                                Text(LocalizedStringKey("book_table"))
                                     .font(Theme.Fonts.body(size: 14))
                                     .fontWeight(.bold)
                                     .foregroundStyle(Color.black)
@@ -95,6 +118,7 @@ struct VenueDetailView: View {
                                     .background(Color.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 0))
                             }
+                            .disabled(isUserRestricted)
                             
                             if venue.events.isEmpty {
                                 ShareLink(item: "Check out \(venue.name) on LSTD!") {
@@ -113,7 +137,7 @@ struct VenueDetailView: View {
                                 Button {
                                     selectedEvent = venue.events.first
                                 } label: {
-                                    Text("BUY TICKETS")
+                                    Text(LocalizedStringKey("buy_tickets"))
                                         .font(Theme.Fonts.body(size: 14))
                                         .fontWeight(.bold)
                                         .foregroundStyle(Color.black)
@@ -122,6 +146,7 @@ struct VenueDetailView: View {
                                         .background(Color.white)
                                         .clipShape(RoundedRectangle(cornerRadius: 0))
                                 }
+                                .disabled(isUserRestricted)
                                 
                                 ShareLink(item: "Check out \(venue.name) on LSTD!") {
                                     Image(systemName: "square.and.arrow.up")
@@ -138,7 +163,7 @@ struct VenueDetailView: View {
                     // Events Section
                     if !venue.events.isEmpty {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("UPCOMING EVENTS")
+                            Text(LocalizedStringKey("upcoming_events"))
                                 .font(Theme.Fonts.body(size: 12))
                                 .fontWeight(.bold)
                                 .foregroundStyle(Color.theme.textSecondary)
@@ -190,11 +215,125 @@ struct VenueDetailView: View {
                     
 
                     
+                    // Weekly Schedule
+                    if !venue.weeklySchedule.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(LocalizedStringKey("weekly_schedule"))
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.theme.textSecondary)
+                            
+                            VStack(spacing: 1) {
+                                ForEach(venue.weeklySchedule.sorted(by: { $0.key < $1.key }), id: \.key) { day, eventName in
+                                    HStack {
+                                        Text(day)
+                                            .font(Theme.Fonts.body(size: 14))
+                                            .foregroundStyle(Color.theme.textSecondary)
+                                            .frame(width: 100, alignment: .leading)
+                                        
+                                        Text(eventName)
+                                            .font(Theme.Fonts.body(size: 14))
+                                            .fontWeight(.medium)
+                                            .foregroundStyle(Color.theme.textPrimary)
+                                        
+                                        Spacer()
+                                    }
+                                    .padding()
+                                    .background(Color.theme.surface)
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                    
+                    // Bottle Menu
+                    if !venue.bottleMenu.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(LocalizedStringKey("bottle_menu"))
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.theme.textSecondary)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 16) {
+                                    ForEach(venue.bottleMenu) { bottle in
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Rectangle()
+                                                .fill(Color.theme.surface)
+                                                .frame(width: 140, height: 140)
+                                                .overlay(
+                                                    Image(systemName: "wineglass.fill")
+                                                        .font(.largeTitle)
+                                                        .foregroundStyle(Color.theme.textSecondary.opacity(0.3))
+                                                )
+                                            
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(bottle.name)
+                                                    .font(Theme.Fonts.body(size: 14))
+                                                    .fontWeight(.medium)
+                                                    .foregroundStyle(Color.theme.textPrimary)
+                                                    .lineLimit(1)
+                                                
+                                                Text(bottle.type)
+                                                    .font(Theme.Fonts.body(size: 12))
+                                                    .foregroundStyle(Color.theme.textSecondary)
+                                                
+                                                Text(bottle.price, format: .currency(code: "AED"))
+                                                    .font(Theme.Fonts.body(size: 14))
+                                                    .fontWeight(.bold)
+                                                    .foregroundStyle(Color.theme.accent)
+                                            }
+                                        }
+                                        .frame(width: 140)
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                            }
+                            // Reset padding for the container since ScrollView handles horizontal padding
+                            .padding(.horizontal, -24)
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                    
+                    // Floor Plan
+                    if let floorplanImage = venue.floorplanImage {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(LocalizedStringKey("floor_plan"))
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.theme.textSecondary)
+                            
+                            if let url = URL(string: floorplanImage) {
+                                AsyncImage(url: url) { image in
+                                    image.resizable().scaledToFit()
+                                } placeholder: {
+                                    ZStack {
+                                        Color.theme.surface
+                                        ProgressView()
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 200)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                            } else {
+                                Image(systemName: "map")
+                                    .font(.system(size: 40))
+                                    .foregroundStyle(Color.theme.textSecondary)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 200)
+                                    .background(Color.theme.surface)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                    
                     // Who's Going Section
                     let friendsAtVenue = socialManager.getFriendsAt(venueId: venue.id.uuidString)
                     if !friendsAtVenue.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("WHO'S GOING")
+                            Text(LocalizedStringKey("whos_going"))
                                 .font(Theme.Fonts.body(size: 12))
                                 .fontWeight(.bold)
                                 .foregroundStyle(Color.theme.textSecondary)
@@ -235,7 +374,7 @@ struct VenueDetailView: View {
                     
                     // Description
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("ABOUT")
+                        Text(LocalizedStringKey("about"))
                             .font(Theme.Fonts.body(size: 12))
                             .fontWeight(.bold)
                             .foregroundStyle(Color.theme.textSecondary)
@@ -246,11 +385,36 @@ struct VenueDetailView: View {
                             .lineSpacing(6)
                     }
                     
+                    if venue.isVerified || venue.safetyMessage != nil {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(LocalizedStringKey("trust_safety"))
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(Color.theme.textSecondary)
+                            
+                            HStack(spacing: 12) {
+                                if venue.isVerified {
+                                    VerifiedBadge(text: NSLocalizedString("verified_venue", comment: ""))
+                                }
+                                
+                                SafetyPill(icon: "person.badge.checkmark", text: "Age \(venue.minimumAge)+ • ID required")
+                                SafetyPill(icon: "checkmark.shield", text: NSLocalizedString("venue_policies", comment: ""))
+                            }
+                            
+                            if let safetyMessage = venue.safetyMessage {
+                                Text(safetyMessage)
+                                    .font(Theme.Fonts.body(size: 14))
+                                    .foregroundStyle(Color.theme.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                    
                     // Info Grid
                     HStack(spacing: 16) {
                         // Price
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("PRICE")
+                            Text(LocalizedStringKey("price_label"))
                                 .font(Theme.Fonts.body(size: 10))
                                 .fontWeight(.bold)
                                 .foregroundStyle(Color.theme.textSecondary)
@@ -265,7 +429,7 @@ struct VenueDetailView: View {
                         
                         // Dress Code
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("DRESS CODE")
+                            Text(LocalizedStringKey("dress_code_label"))
                                 .font(Theme.Fonts.body(size: 10))
                                 .fontWeight(.bold)
                                 .foregroundStyle(Color.theme.textSecondary)
@@ -281,13 +445,14 @@ struct VenueDetailView: View {
                         .background(Color.theme.surface)
                     }
                     
-                    // Location
+                    // Location & Rideshare
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("LOCATION")
+                        Text(LocalizedStringKey("location_label"))
                             .font(Theme.Fonts.body(size: 12))
                             .fontWeight(.bold)
                             .foregroundStyle(Color.theme.textSecondary)
                         
+                        // Open in Apple Maps
                         Button {
                             let query = venue.location.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
                             if let url = URL(string: "http://maps.apple.com/?q=\(query)") {
@@ -310,6 +475,28 @@ struct VenueDetailView: View {
                             }
                             .padding(12)
                             .background(Color.theme.surface)
+                        }
+                        
+                        // Get a ride: Careem / Ekar / Apple Maps fallback
+                        Button {
+                            RideShareManager.openBestOption(for: venue)
+                        } label: {
+                            HStack {
+                                Image(systemName: "car.fill")
+                                    .foregroundStyle(Color.theme.accent)
+                                Text(LocalizedStringKey("get_a_ride"))
+                                    .font(Theme.Fonts.body(size: 16))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Color.theme.textPrimary)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.theme.textSecondary)
+                            }
+                            .padding(12)
+                            .background(Color.theme.surface.opacity(0.9))
                         }
                     }
                     
@@ -391,31 +578,43 @@ struct GuestListFormView: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
                             .foregroundStyle(.white)
-                        Text("REQUEST SENT")
+                        Text(LocalizedStringKey("request_sent"))
                             .font(Theme.Fonts.display(size: 24))
                             .foregroundStyle(.white)
-                        Text("You will receive a confirmation email shortly.")
+                        Text(LocalizedStringKey("request_sent_msg"))
                             .font(Theme.Fonts.body(size: 16))
                             .foregroundStyle(.gray)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
                     }
+                } else if let user = authManager.user, user.isBanned {
+                    SafetyCallout(
+                        title: NSLocalizedString("booking_blocked", comment: ""),
+                        message: NSLocalizedString("booking_blocked_msg", comment: "")
+                    )
+                    .padding()
+                } else if let user = authManager.user, user.isSoftBanned, let softBanUntil = user.softBanUntil {
+                    SafetyCallout(
+                        title: NSLocalizedString("temporarily_paused", comment: ""),
+                        message: "Guest list requests paused until \(softBanUntil.formatted(date: .abbreviated, time: .omitted)). Your no-show count is \(user.noShowCount)."
+                    )
+                    .padding()
                 } else {
                     Form {
                         Section {
-                            TextField("Full Name", text: $name)
-                            TextField("Email", text: $email)
+                            TextField(LocalizedStringKey("Full Name"), text: $name)
+                            TextField(LocalizedStringKey("Email"), text: $email)
                                 .keyboardType(.emailAddress)
                                 .textInputAutocapitalization(.never)
                         } header: {
-                            Text("YOUR DETAILS")
+                            Text(LocalizedStringKey("your_details"))
                         }
                         
                         Section {
-                            DatePicker("Date", selection: $date, displayedComponents: .date)
+                            DatePicker(LocalizedStringKey("Date"), selection: $date, displayedComponents: .date)
                             Stepper("Guests: \(guests)", value: $guests, in: 1...10)
                         } header: {
-                            Text("RESERVATION")
+                            Text(LocalizedStringKey("reservation"))
                         }
                     }
                     .scrollContentBackground(.hidden)
@@ -425,7 +624,7 @@ struct GuestListFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
+                    Button(LocalizedStringKey("cancel")) {
                         dismiss()
                     }
                     .foregroundStyle(.white)
@@ -433,7 +632,7 @@ struct GuestListFormView: View {
                 
                 if !showSuccess {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("Submit") {
+                        Button(LocalizedStringKey("submit")) {
                             Task {
                                 do {
                                     let generator = UINotificationFeedbackGenerator()
@@ -462,12 +661,76 @@ struct GuestListFormView: View {
                         }
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
-                        .disabled(name.isEmpty || email.isEmpty)
+                        .disabled(name.isEmpty || email.isEmpty || authManager.user?.isBanned == true || authManager.user?.isSoftBanned == true)
                     }
                 }
             }
         }
         .preferredColorScheme(.dark)
+    }
+}
+
+struct VerifiedBadge: View {
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.caption)
+            Text(text.uppercased())
+                .font(Theme.Fonts.body(size: 10))
+                .fontWeight(.bold)
+        }
+        .foregroundStyle(.green)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.green.opacity(0.15))
+        .clipShape(Capsule())
+    }
+}
+
+struct SafetyCallout: View {
+    let title: String
+    let message: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "exclamationmark.shield.fill")
+                .font(.title3)
+                .foregroundStyle(.yellow)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title.uppercased())
+                    .font(Theme.Fonts.body(size: 12))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                Text(message)
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.gray)
+            }
+        }
+        .padding(12)
+        .background(Color.theme.surface.opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct SafetyPill: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.caption)
+            Text(text)
+                .font(Theme.Fonts.body(size: 12))
+        }
+        .foregroundStyle(Color.theme.textPrimary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.theme.surface.opacity(0.5))
+        .clipShape(Capsule())
     }
 }
 

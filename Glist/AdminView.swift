@@ -13,21 +13,19 @@ struct AdminView: View {
                 VStack(spacing: 0) {
                     // Custom Tab Selector
                     HStack(spacing: 0) {
-                        AdminTabButton(title: "GUEST LISTS", isSelected: selectedTab == 0) {
-                            selectedTab = 0
-                        }
-                        AdminTabButton(title: "VENUES", isSelected: selectedTab == 1) {
-                            selectedTab = 1
-                        }
-                        AdminTabButton(title: "ANALYTICS", isSelected: selectedTab == 2) {
-                            selectedTab = 2
-                        }
-                        AdminTabButton(title: "SCANNER", isSelected: selectedTab == 3) {
-                            selectedTab = 3
-                        }
+                        AdminTabButton(title: LocalizedStringKey("tab_guest_lists"), isSelected: selectedTab == 0) { selectedTab = 0 }
+                        AdminTabButton(title: LocalizedStringKey("tab_venues"), isSelected: selectedTab == 1) { selectedTab = 1 }
+                        AdminTabButton(title: LocalizedStringKey("tab_analytics"), isSelected: selectedTab == 2) { selectedTab = 2 }
+                        AdminTabButton(title: LocalizedStringKey("tab_scanner"), isSelected: selectedTab == 3) { selectedTab = 3 }
+                        AdminTabButton(title: LocalizedStringKey("tab_kyc"), isSelected: selectedTab == 4) { selectedTab = 4 }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
+                    
+                    if let user = authManager.user, user.kycStatus != .verified {
+                        AdminKYCAlert(status: user.kycStatus)
+                            .padding(.horizontal, 20)
+                    }
                     
                     // Content
                     TabView(selection: $selectedTab) {
@@ -40,8 +38,11 @@ struct AdminView: View {
                         AnalyticsView()
                             .tag(2)
                         
-                        ScannerView()
+                        StaffScannerWrapperView()
                             .tag(3)
+                        
+                        KYCReviewView()
+                            .tag(4)
                     }
                     .tabViewStyle(.page(indexDisplayMode: .never))
                 }
@@ -61,7 +62,7 @@ struct AdminView: View {
 }
 
 struct AdminTabButton: View {
-    let title: String
+    let title: LocalizedStringKey
     let isSelected: Bool
     let action: () -> Void
     
@@ -74,6 +75,239 @@ struct AdminTabButton: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .background(isSelected ? Color.theme.surface : Color.clear)
+        }
+    }
+}
+
+struct AdminKYCAlert: View {
+    let status: KYCStatus
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: status == .verified ? "checkmark.seal.fill" : "shield.fill")
+                .foregroundStyle(status.badgeColor)
+                .font(.title3)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(status == .verified ? "Admin KYC Verified" : "Complete KYC for Admin Tools")
+                    .font(Theme.Fonts.body(size: 12))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                Text(status == .verified ? "Identity and payout details confirmed." : "Upload ID and licensing documents to keep scanner and analytics access.")
+                    .font(Theme.Fonts.body(size: 11))
+                    .foregroundStyle(.gray)
+            }
+            Spacer()
+        }
+        .padding(14)
+        .background(Color.theme.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct KYCReviewView: View {
+    @State private var submissions: [KYCSubmission] = []
+    @State private var isLoading = false
+    @State private var filter: KYCStatus? = .pending
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Filter Pills
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    KYCFilterChip(title: "All", isSelected: filter == nil) { filter = nil; Task { await load() } }
+                    KYCFilterChip(title: "Pending", isSelected: filter == .pending) { filter = .pending; Task { await load() } }
+                    KYCFilterChip(title: "Verified", isSelected: filter == .verified) { filter = .verified; Task { await load() } }
+                    KYCFilterChip(title: "Failed", isSelected: filter == .failed) { filter = .failed; Task { await load() } }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
+            
+            if isLoading {
+                ProgressView()
+                    .tint(.white)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if submissions.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.gray)
+                    Text("No submissions found")
+                        .foregroundStyle(.gray)
+                        .font(Theme.Fonts.body(size: 14))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(submissions) { submission in
+                            KYCSubmissionCard(submission: submission) { newStatus in
+                                Task { await update(submission: submission, to: newStatus) }
+                            }
+                        }
+                    }
+                    .padding(20)
+                }
+            }
+        }
+        .onAppear {
+            Task { await load() }
+        }
+    }
+    
+    private func load() async {
+        isLoading = true
+        do {
+            submissions = try await FirestoreManager.shared.fetchKYCSubmissions(status: filter)
+        } catch {
+            print("Failed to load KYC submissions: \(error)")
+        }
+        isLoading = false
+    }
+    
+    private func update(submission: KYCSubmission, to status: KYCStatus) async {
+        isLoading = true
+        do {
+            try await FirestoreManager.shared.updateKYCSubmissionStatus(
+                submissionId: submission.id,
+                userId: submission.userId,
+                status: status,
+                reviewerId: nil,
+                notes: submission.notes
+            )
+            await load()
+        } catch {
+            print("Failed to update KYC status: \(error)")
+            isLoading = false
+        }
+    }
+}
+
+struct KYCFilterChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(Theme.Fonts.body(size: 12))
+                .fontWeight(.bold)
+                .foregroundStyle(isSelected ? .black : .white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color.white : Color.theme.surface.opacity(0.5))
+                .clipShape(Capsule())
+        }
+    }
+}
+
+struct KYCSubmissionCard: View {
+    let submission: KYCSubmission
+    let onUpdate: (KYCStatus) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(submission.fullName.uppercased())
+                    .font(Theme.Fonts.display(size: 16))
+                Spacer()
+                StatusPill(status: submission.status)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text("\(submission.documentType) • \(submission.documentNumber)")
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.gray)
+                Text("Submitted \(submission.submittedAt.formatted(date: .abbreviated, time: .shortened))")
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.gray)
+            }
+            
+            if let notes = submission.notes, !notes.isEmpty {
+                Text(notes)
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.white)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                if let url = submission.documentFrontURL {
+                    LinkRow(icon: "doc.text.viewfinder", label: "Front of ID", url: url)
+                }
+                if let url = submission.documentBackURL {
+                    LinkRow(icon: "doc.viewfinder", label: "Back of ID", url: url)
+                }
+                if let url = submission.selfieURL {
+                    LinkRow(icon: "camera.fill", label: "Selfie / Live photo", url: url)
+                }
+                if let url = submission.addressProofURL {
+                    LinkRow(icon: "house.fill", label: "Address proof", url: url)
+                }
+            }
+            
+            if submission.status == .pending {
+                HStack(spacing: 12) {
+                    Button {
+                        onUpdate(.verified)
+                    } label: {
+                        HStack {
+                            Image(systemName: "checkmark.seal.fill")
+                            Text("Approve")
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                        }
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(.green)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    
+                    Button {
+                        onUpdate(.failed)
+                    } label: {
+                        HStack {
+                            Image(systemName: "xmark.seal.fill")
+                            Text("Reject")
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(.red.opacity(0.9))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(Color.theme.surface.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+}
+
+struct LinkRow: View {
+    let icon: String
+    let label: String
+    let url: String
+    
+    var body: some View {
+        if let link = URL(string: url) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(.gray)
+                Link(label, destination: link)
+                    .font(Theme.Fonts.body(size: 12))
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                    .font(.caption)
+                    .foregroundStyle(.gray)
+            }
         }
     }
 }
@@ -98,16 +332,16 @@ struct GuestListManagementView: View {
             // Filter Buttons
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    FilterChip(title: "All", isSelected: filterStatus == "All") {
+                    FilterChip(title: NSLocalizedString("filter_all", comment: ""), isSelected: filterStatus == "All") {
                         filterStatus = "All"
                     }
-                    FilterChip(title: "Pending", isSelected: filterStatus == "Pending") {
+                    FilterChip(title: NSLocalizedString("filter_pending", comment: ""), isSelected: filterStatus == "Pending") {
                         filterStatus = "Pending"
                     }
-                    FilterChip(title: "Confirmed", isSelected: filterStatus == "Confirmed") {
+                    FilterChip(title: NSLocalizedString("filter_confirmed", comment: ""), isSelected: filterStatus == "Confirmed") {
                         filterStatus = "Confirmed"
                     }
-                    FilterChip(title: "Rejected", isSelected: filterStatus == "Rejected") {
+                    FilterChip(title: NSLocalizedString("filter_rejected", comment: ""), isSelected: filterStatus == "Rejected") {
                         filterStatus = "Rejected"
                     }
                 }
@@ -125,7 +359,7 @@ struct GuestListManagementView: View {
                     Image(systemName: "list.clipboard")
                         .font(.system(size: 40))
                         .foregroundStyle(.gray)
-                    Text("No guest list requests")
+                    Text(LocalizedStringKey("no_guest_requests"))
                         .font(Theme.Fonts.body(size: 14))
                         .foregroundStyle(.gray)
                 }
@@ -162,24 +396,7 @@ struct GuestListManagementView: View {
     }
 }
 
-struct FilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(Theme.Fonts.body(size: 12))
-                .fontWeight(.bold)
-                .foregroundStyle(isSelected ? .black : .white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? .white : Color.theme.surface)
-                .clipShape(Capsule())
-        }
-    }
-}
+// Uses shared FilterChip from venue views
 
 struct AdminGuestListCard: View {
     let request: GuestListRequest
@@ -368,7 +585,7 @@ struct VenueManagementView: View {
             } label: {
                 HStack {
                     Image(systemName: "plus.circle.fill")
-                    Text("ADD NEW VENUE")
+                    Text(LocalizedStringKey("add_new_venue"))
                         .font(Theme.Fonts.body(size: 14))
                         .fontWeight(.bold)
                 }
@@ -526,7 +743,7 @@ struct AnalyticsView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Period Selector
-                Picker("Period", selection: $analyticsManager.selectedPeriod) {
+                Picker(LocalizedStringKey("period"), selection: $analyticsManager.selectedPeriod) {
                     Text("Day").tag(AnalyticsPeriod.day)
                     Text("Week").tag(AnalyticsPeriod.week)
                     Text("Month").tag(AnalyticsPeriod.month)
@@ -543,26 +760,26 @@ struct AnalyticsView: View {
                 // Summary Stats
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     AnalyticsStatCard(
-                        title: "TOTAL REVENUE",
-                        value: "$\(Int(analyticsManager.totalRevenue))",
+                        title: NSLocalizedString("total_revenue", comment: ""),
+                        value: CurrencyFormatter.aed(analyticsManager.totalRevenue),
                         icon: "dollarsign.circle.fill",
                         color: .green
                     )
                     AnalyticsStatCard(
-                        title: "BOOKINGS",
+                        title: NSLocalizedString("bookings", comment: ""),
                         value: "\(analyticsManager.totalBookings)",
                         icon: "calendar.circle.fill",
                         color: .blue
                     )
                     AnalyticsStatCard(
-                        title: "TICKETS SOLD",
+                        title: NSLocalizedString("tickets_sold", comment: ""),
                         value: "\(analyticsManager.totalTickets)",
                         icon: "ticket.fill",
                         color: .purple
                     )
                     AnalyticsStatCard(
-                        title: "AVG PER BOOKING",
-                        value: analyticsManager.totalBookings > 0 ? "$\(Int(analyticsManager.totalRevenue / Double(analyticsManager.totalBookings)))" : "$0",
+                        title: NSLocalizedString("avg_per_booking", comment: ""),
+                        value: analyticsManager.totalBookings > 0 ? CurrencyFormatter.aed(analyticsManager.totalRevenue / Double(analyticsManager.totalBookings)) : CurrencyFormatter.aed(0),
                         icon: "chart.line.uptrend.xyaxis",
                         color: .orange
                     )
@@ -573,7 +790,7 @@ struct AnalyticsView: View {
                 if !analyticsManager.venueAnalytics.isEmpty {
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
-                            Text("VENUE PERFORMANCE")
+                            Text(LocalizedStringKey("venue_performance"))
                                 .font(Theme.Fonts.body(size: 12))
                                 .fontWeight(.bold)
                                 .foregroundStyle(.gray)
@@ -585,7 +802,7 @@ struct AnalyticsView: View {
                             } label: {
                                 HStack(spacing: 4) {
                                     Image(systemName: "square.and.arrow.up")
-                                    Text("Export")
+                                    Text(LocalizedStringKey("export"))
                                 }
                                 .font(Theme.Fonts.body(size: 12))
                                 .foregroundStyle(Color.theme.accent)
@@ -610,6 +827,8 @@ struct AnalyticsView: View {
         .onAppear {
             Task {
                 await analyticsManager.fetchAnalytics()
+                await analyticsManager.fetchTodayOverview()
+                await analyticsManager.fetchAlerts()
             }
         }
     }
@@ -648,7 +867,7 @@ struct AnalyticsStatCard: View {
                 .font(Theme.Fonts.display(size: 24))
                 .foregroundStyle(.white)
             
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(Theme.Fonts.body(size: 10))
                 .foregroundStyle(.gray)
         }
@@ -675,15 +894,15 @@ struct VenueAnalyticsRow: View {
                 
                 Spacer()
                 
-                Text("$\(Int(analytics.totalRevenue))")
+                Text(CurrencyFormatter.aed(analytics.totalRevenue))
                     .font(Theme.Fonts.display(size: 18))
                     .foregroundStyle(.green)
             }
             
             HStack(spacing: 20) {
-                VenueStatItem(icon: "calendar", value: "\(analytics.totalBookings)", label: "Bookings")
-                VenueStatItem(icon: "ticket", value: "\(analytics.totalTickets)", label: "Tickets")
-                VenueStatItem(icon: "person.2", value: "\(analytics.totalGuestLists)", label: "Lists")
+                VenueStatItem(icon: "calendar", value: "\(analytics.totalBookings)", label: LocalizedStringKey("bookings"))
+                VenueStatItem(icon: "ticket", value: "\(analytics.totalTickets)", label: LocalizedStringKey("tickets_sold"))
+                VenueStatItem(icon: "person.2", value: "\(analytics.totalGuestLists)", label: LocalizedStringKey("guest_lists_title"))
             }
         }
         .padding(16)
@@ -695,7 +914,7 @@ struct VenueAnalyticsRow: View {
 struct VenueStatItem: View {
     let icon: String
     let value: String
-    let label: String
+    let label: LocalizedStringKey
     
     var body: some View {
         VStack(spacing: 4) {
@@ -748,168 +967,62 @@ struct StatCard: View {
 
 // MARK: - Scanner
 
-struct ScannerView: View {
-    @State private var scannedCode: String?
-    @State private var scannedRequest: GuestListRequest?
-    @State private var isProcessing = false
-    @State private var errorMessage: String?
-    @State private var showScanner = false
+struct StaffScannerWrapperView: View {
+    @EnvironmentObject var venueManager: VenueManager
+    @StateObject private var staffManager = StaffModeManager()
+    @State private var selectedVenueId: String?
+    @State private var entranceId: String = "Main Entrance"
+    @State private var syncMessage: String?
     
     var body: some View {
-        VStack {
-            if let request = scannedRequest {
-                // Show request details
-                VStack(spacing: 24) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.green)
-                    
-                    Text("GUEST FOUND")
-                        .font(Theme.Fonts.display(size: 24))
-                        .foregroundStyle(.white)
-                    
-                    VStack(spacing: 8) {
-                        Text(request.name)
-                            .font(Theme.Fonts.display(size: 32))
-                            .foregroundStyle(.white)
-                        
-                        Text("\(request.guestCount) Guests")
-                            .font(Theme.Fonts.body(size: 18))
-                            .foregroundStyle(.gray)
+        VStack(spacing: 12) {
+            HStack {
+                Picker("Venue", selection: Binding(
+                    get: { selectedVenueId ?? venueManager.venues.first?.id.uuidString ?? "" },
+                    set: { selectedVenueId = $0 }
+                )) {
+                    ForEach(venueManager.venues, id: \.id) { venue in
+                        Text(venue.name).tag(venue.id.uuidString)
                     }
-                    
-                    VStack(spacing: 16) {
-                        HStack {
-                            Text("Venue:")
-                                .foregroundStyle(.gray)
-                            Spacer()
-                            Text(request.venueName)
-                                .foregroundStyle(.white)
-                        }
-                        
-                        HStack {
-                            Text("Date:")
-                                .foregroundStyle(.gray)
-                            Spacer()
-                            Text(request.date.formatted(date: .long, time: .omitted))
-                                .foregroundStyle(.white)
-                        }
-                        
-                        HStack {
-                            Text("Status:")
-                                .foregroundStyle(.gray)
-                            Spacer()
-                            Text(request.status)
-                                .foregroundStyle(request.status == "Confirmed" ? .green : .orange)
-                        }
-                    }
-                    .padding()
-                    .background(Color.theme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    
-                    if request.status != "Checked In" {
-                        Button {
-                            checkIn(request)
-                        } label: {
-                            Text("CHECK IN")
-                                .font(Theme.Fonts.body(size: 16))
-                                .fontWeight(.bold)
-                                .foregroundStyle(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.white)
-                                .clipShape(Capsule())
-                        }
-                    } else {
-                        Text("ALREADY CHECKED IN")
-                            .font(Theme.Fonts.body(size: 16))
-                            .fontWeight(.bold)
-                            .foregroundStyle(.green)
-                    }
-                    
-                    Button("Scan Next") {
-                        scannedRequest = nil
-                        scannedCode = nil
-                    }
-                    .padding(.top)
                 }
-                .padding(40)
+                .pickerStyle(MenuPickerStyle())
+                
+                TextField("Entrance", text: $entranceId)
+                    .textInputAutocapitalization(.words)
+                    .padding(8)
+                    .background(Color.theme.surface.opacity(0.2))
+                    .cornerRadius(8)
+            }
+            .padding(.horizontal)
+            
+            if let venueId = selectedVenueId ?? venueManager.venues.first?.id.uuidString {
+                StaffCheckInView(
+                    manager: staffManager,
+                    venueId: venueId,
+                    entranceId: entranceId,
+                    syncHandler: { events in
+                        // Stubbed backend sync: pretend all processed
+                        await MainActor.run {
+                            syncMessage = "Synced \(events.count) scans"
+                        }
+                        return events.map(\.id)
+                    }
+                )
             } else {
-                // Show Scanner Button
-                Button {
-                    showScanner = true
-                } label: {
-                    VStack(spacing: 16) {
-                        Image(systemName: "qrcode.viewfinder")
-                            .font(.system(size: 60))
-                        Text("TAP TO SCAN")
-                            .font(Theme.Fonts.body(size: 16))
-                            .fontWeight(.bold)
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.theme.surface.opacity(0.1))
-                }
+                Text("No venues available")
+                    .foregroundColor(.gray)
+            }
+            
+            if let syncMessage {
+                Text(syncMessage)
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundColor(Color.theme.textSecondary)
+                    .padding(.bottom)
             }
         }
-        .sheet(isPresented: $showScanner) {
-            QRScannerView(scannedCode: $scannedCode)
-        }
-        .onChange(of: scannedCode) { _, newValue in
-            if let code = newValue {
-                processScannedCode(code)
-            }
-        }
-        .alert("Error", isPresented: Binding<Bool>(
-            get: { errorMessage != nil },
-            set: { _ in errorMessage = nil }
-        )) {
-            Button("OK") { errorMessage = nil }
-        } message: {
-            Text(errorMessage ?? "")
-        }
-    }
-    
-    private func processScannedCode(_ code: String) {
-        isProcessing = true
-        Task {
-            do {
-                if let request = try await FirestoreManager.shared.fetchGuestListRequest(qrCodeId: code) {
-                    await MainActor.run {
-                        scannedRequest = request
-                        isProcessing = false
-                    }
-                } else {
-                    await MainActor.run {
-                        errorMessage = "Invalid QR Code"
-                        isProcessing = false
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    errorMessage = "Error: \(error.localizedDescription)"
-                    isProcessing = false
-                }
-            }
-        }
-    }
-    
-    private func checkIn(_ request: GuestListRequest) {
-        Task {
-            do {
-                try await FirestoreManager.shared.updateGuestListStatus(requestId: request.id.uuidString, status: "Checked In")
-                
-                // Add reward points (e.g., 100 points)
-                try await FirestoreManager.shared.addRewardPoints(userId: request.userId, points: 100)
-                
-                // Refresh local request
-                if let updatedRequest = try await FirestoreManager.shared.fetchGuestListRequest(qrCodeId: request.qrCodeId ?? request.id.uuidString) {
-                    await MainActor.run {
-                        scannedRequest = updatedRequest
-                    }
-                }
-            } catch {
-                print("Error checking in: \(error)")
+        .onAppear {
+            if selectedVenueId == nil {
+                selectedVenueId = venueManager.venues.first?.id.uuidString
             }
         }
     }

@@ -8,5 +8,7 @@
 	</array>
 	<key>CFBundleDisplayName</key>
 	<string>LSTD</string>
+	<key>PassServiceBaseURL</key>
+	<string>https://api.example.com/passes</string>
 </dict>
 </plist>

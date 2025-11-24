@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TableBookingView: View {
     let venue: Venue
+    @Environment(\.locale) private var locale
     @State private var selectedDate = Date()
     @State private var selectedTable: Table?
     @State private var showCheckout = false
@@ -79,7 +80,7 @@ struct TableBookingView: View {
                                 Text("DEPOSIT REQUIRED")
                                     .font(Theme.Fonts.body(size: 10))
                                     .foregroundStyle(.gray)
-                                Text("$\(Int(table.minimumSpend * 0.20))")
+                                Text(CurrencyFormatter.aed(table.minimumSpend * 0.20, locale: locale))
                                     .font(Theme.Fonts.display(size: 24))
                                     .foregroundStyle(.white)
                             }
@@ -120,6 +121,7 @@ struct TableCard: View {
     let table: Table
     let isSelected: Bool
     let action: () -> Void
+    @Environment(\.locale) private var locale
     
     var body: some View {
         Button(action: action) {
@@ -141,7 +143,7 @@ struct TableCard: View {
                     
                     HStack(spacing: 12) {
                         Label("\(table.capacity) Guests", systemImage: "person.2.fill")
-                        Label("Min. $\(Int(table.minimumSpend))", systemImage: "dollarsign.circle.fill")
+                        Label("Min. \(CurrencyFormatter.aed(table.minimumSpend, locale: locale))", systemImage: "dollarsign.circle.fill")
                     }
                     .font(Theme.Fonts.body(size: 12))
                     .foregroundStyle(.gray)

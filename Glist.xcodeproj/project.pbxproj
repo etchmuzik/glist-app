@@ -7,10 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DEADBEEF0000000000000002 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000001 /* FirebaseMessaging */; };
 		EDD391E22ECFABE0001E84DA /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = EDD391E12ECFABE0001E84DA /* FirebaseAuth */; };
 		EDD391E42ECFABE0001E84DA /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EDD391E32ECFABE0001E84DA /* FirebaseFirestore */; };
-
-		DEADBEEF0000000000000002 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000001 /* FirebaseMessaging */; };
 		EDD391E62ECFABE0001E84DA /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = EDD391E52ECFABE0001E84DA /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
@@ -76,8 +75,8 @@
 				EDD391E22ECFABE0001E84DA /* FirebaseAuth in Frameworks */,
 				EDD391E42ECFABE0001E84DA /* FirebaseFirestore in Frameworks */,
 				EDD391E62ECFABE0001E84DA /* FirebaseStorage in Frameworks */,
-			
-				DEADBEEF0000000000000002 /* FirebaseMessaging in Frameworks */,);
+				DEADBEEF0000000000000002 /* FirebaseMessaging in Frameworks */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		EDF3E3242EAEE0F6006EC150 /* Frameworks */ = {
@@ -140,8 +139,8 @@
 				EDD391E12ECFABE0001E84DA /* FirebaseAuth */,
 				EDD391E32ECFABE0001E84DA /* FirebaseFirestore */,
 				EDD391E52ECFABE0001E84DA /* FirebaseStorage */,
-			
-				DEADBEEF0000000000000001 /* FirebaseMessaging */,);
+				DEADBEEF0000000000000001 /* FirebaseMessaging */,
+			);
 			productName = Glist;
 			productReference = EDF3E3162EAEE0F3006EC150 /* Glist.app */;
 			productType = "com.apple.product-type.application";
@@ -221,6 +220,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ar,
 			);
 			mainGroup = EDF3E30D2EAEE0F3006EC150;
 			minimizedProjectReferenceProxies = 1;
@@ -664,6 +664,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		DEADBEEF0000000000000001 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
 		EDD391E12ECFABE0001E84DA /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
@@ -673,12 +678,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
-		};
-
-		DEADBEEF0000000000000001 /* FirebaseMessaging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
 		};
 		EDD391E52ECFABE0001E84DA /* FirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;

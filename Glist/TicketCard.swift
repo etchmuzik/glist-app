@@ -3,6 +3,7 @@ import Combine
 
 struct TicketCard: View {
     let ticket: EventTicket
+    @Environment(\.locale) private var locale
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -46,6 +47,14 @@ struct TicketCard: View {
                         .font(.caption)
                         .foregroundStyle(.gray)
                     Text("Tap to show QR")
+                        .font(Theme.Fonts.body(size: 12))
+                        .foregroundStyle(.gray)
+                }
+                HStack(spacing: 6) {
+                    Image(systemName: "creditcard")
+                        .font(.caption)
+                        .foregroundStyle(.gray)
+                    Text(CurrencyFormatter.aed(ticket.price, locale: locale))
                         .font(Theme.Fonts.body(size: 12))
                         .foregroundStyle(.gray)
                 }

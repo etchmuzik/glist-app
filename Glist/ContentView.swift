@@ -5,7 +5,11 @@ struct ContentView: View {
     @StateObject private var favoritesManager = FavoritesManager()
     @StateObject private var guestListManager = GuestListManager()
     @StateObject private var venueManager = VenueManager()
-    
+    @StateObject private var loyaltyManager = LoyaltyManager.shared
+
+    // Controls whether we show the sleek onboarding screen first.
+    @State private var showOnboarding: Bool = true
+
     init() {
         // Configure Tab Bar appearance
         let appearance = UITabBarAppearance()
@@ -20,17 +24,26 @@ struct ContentView: View {
     }
 
     var body: some View {
-        if authManager.isAuthenticated {
+        if showOnboarding {
+            OnboardingView(isLoggedIn: $showOnboarding)
+                .preferredColorScheme(.dark)
+        } else if authManager.isAuthenticated {
             MainTabView()
                 .preferredColorScheme(.dark)
                 .environmentObject(favoritesManager)
                 .environmentObject(guestListManager)
                 .environmentObject(authManager)
                 .environmentObject(venueManager)
+                .environmentObject(loyaltyManager)
                 .onAppear {
                     // Start listening for guest list updates
                     if let userId = authManager.user?.id {
                         guestListManager.startListening(userId: userId)
+                        
+                        // Update Streak
+                        Task {
+                            try? await FirestoreManager.shared.updateStreak(userId: userId)
+                        }
                     }
                 }
                 .onDisappear {
@@ -57,6 +70,11 @@ struct MainTabView: View {
             VenueMapView()
                 .tabItem {
                     Label("MAP", systemImage: "map")
+                }
+            
+            SocialView()
+                .tabItem {
+                    Label("SOCIAL", systemImage: "person.2.fill")
                 }
             
             ProfileView()
@@ -91,6 +109,7 @@ struct ProfileView: View {
     @EnvironmentObject var venueManager: VenueManager
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var bookingManager: BookingManager
+    @EnvironmentObject var loyaltyManager: LoyaltyManager
     @StateObject private var ticketManager = TicketManager()
     @State private var showSeedView = false
     @State private var showAccountSettings = false
@@ -98,10 +117,12 @@ struct ProfileView: View {
     @State private var showPrivacy = false
     @State private var showHelp = false
     @State private var showLogoutAlert = false
+    @State private var showKYC = false
     @State private var selectedRequest: GuestListRequest?
     @State private var selectedTicket: EventTicket?
     @State private var showSubscription = false
     @State private var showInvite = false
+    @State private var showRewards = false
     
     var favoriteVenues: [Venue] {
         venueManager.venues.filter { favoritesManager.isFavorite(venueId: $0.id) }
@@ -122,17 +143,19 @@ struct ProfileView: View {
                 ScrollView {
                     VStack(spacing: 32) {
                         headerSection
+                        loyaltySection
                         guestListsSection
                         ticketsSection
                         bookingsSection
                         favoritesSection
                         inviteSection
                         settingsSection
+                        developerSection
                     }
                     .padding(.bottom, 100)
                 }
             }
-            .navigationTitle("PROFILE")
+            .navigationTitle(LocalizedStringKey("profile_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -159,6 +182,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showNotifications) {
                 NotificationsView()
+            }
+            .sheet(isPresented: $showKYC) {
+                KYCSubmissionView()
             }
             .sheet(isPresented: $showPrivacy) {
                 PrivacyView()
@@ -201,6 +227,9 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showInvite) {
                 InviteView()
+            }
+            .sheet(isPresented: $showRewards) {
+                RewardsView()
             }
         }
     }
@@ -257,7 +286,7 @@ struct ProfileView: View {
                             Button {
                                 showSubscription = true
                             } label: {
-                                Text("UPGRADE MEMBERSHIP")
+                                Text(LocalizedStringKey("upgrade_membership"))
                                     .font(Theme.Fonts.body(size: 12))
                                     .fontWeight(.bold)
                                     .foregroundStyle(.black)
@@ -275,22 +304,22 @@ struct ProfileView: View {
                                 Text("\(user.followers.count)")
                                     .font(Theme.Fonts.display(size: 18))
                                     .foregroundStyle(.white)
-                                Text("Followers")
-                                    .font(Theme.Fonts.body(size: 12))
-                                    .foregroundStyle(.gray)
+                            Text(LocalizedStringKey("followers"))
+                                .font(Theme.Fonts.body(size: 12))
+                                .foregroundStyle(.gray)
                             }
                             
                             VStack {
                                 Text("\(user.following.count)")
                                     .font(Theme.Fonts.display(size: 18))
                                     .foregroundStyle(.white)
-                                Text("Following")
-                                    .font(Theme.Fonts.body(size: 12))
-                                    .foregroundStyle(.gray)
+                            Text(LocalizedStringKey("following"))
+                                .font(Theme.Fonts.body(size: 12))
+                                .foregroundStyle(.gray)
                             }
                             
                             NavigationLink(destination: SocialView()) {
-                                Text("Find Friends")
+                                Text(LocalizedStringKey("find_friends"))
                                     .font(Theme.Fonts.body(size: 12))
                                     .fontWeight(.bold)
                                     .foregroundStyle(.black)
@@ -331,13 +360,146 @@ struct ProfileView: View {
             
             // Stats Row
             HStack(spacing: 40) {
-                StatItem(value: "\(guestListManager.requests.count)", label: "Guest Lists")
-                StatItem(value: "\(bookingManager.bookings.count)", label: "Bookings")
-                StatItem(value: "\(favoriteVenues.count)", label: "Favorites")
+                StatItem(value: "\(guestListManager.requests.count)", label: NSLocalizedString("guest_lists_title", comment: ""))
+                StatItem(value: "\(bookingManager.bookings.count)", label: NSLocalizedString("bookings_title", comment: ""))
+                StatItem(value: "\(favoriteVenues.count)", label: NSLocalizedString("favorites_title", comment: ""))
             }
             .padding(.top, 10)
         }
         .padding(.top, 20)
+    }
+
+    @ViewBuilder
+    private var loyaltySection: some View {
+        if let user = authManager.user {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    SectionHeader(title: NSLocalizedString("loyalty_rewards", comment: ""))
+                    Spacer()
+                    Button {
+                        showRewards = true
+                    } label: {
+                        Text(LocalizedStringKey("redeem"))
+                            .font(Theme.Fonts.body(size: 12))
+                            .fontWeight(.bold)
+                            .foregroundStyle(Color.theme.accent)
+                            .padding(.horizontal, 16)
+                    }
+                }
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        // Points Card
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "star.circle.fill")
+                                    .foregroundStyle(.yellow)
+                                Text(LocalizedStringKey("points"))
+                                    .font(Theme.Fonts.body(size: 10))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.gray)
+                            }
+                            
+                            Text("\(user.rewardPoints)")
+                                .font(Theme.Fonts.display(size: 24))
+                                .foregroundStyle(.white)
+                            
+                            Text("Lifetime: \(user.lifetimePoints)")
+                                .font(Theme.Fonts.body(size: 10))
+                                .foregroundStyle(.gray)
+                        }
+                        .padding(16)
+                        .frame(width: 140, height: 100)
+                        .background(Color.theme.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        
+                        // Streak Card
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Image(systemName: "flame.fill")
+                                    .foregroundStyle(.orange)
+                                Text(LocalizedStringKey("streak"))
+                                    .font(Theme.Fonts.body(size: 10))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.gray)
+                            }
+                            
+                            Text("\(user.currentStreak) WEEKS")
+                                .font(Theme.Fonts.display(size: 24))
+                                .foregroundStyle(.white)
+                            
+                            Text("Keep it up!")
+                                .font(Theme.Fonts.body(size: 10))
+                                .foregroundStyle(.gray)
+                        }
+                        .padding(16)
+                        .frame(width: 140, height: 100)
+                        .background(Color.theme.surface)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        
+                        // Referral Card
+                        Button {
+                            UIPasteboard.general.string = user.referralCode
+                        } label: {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "person.2.fill")
+                                        .foregroundStyle(.blue)
+                                    Text("REFERRAL")
+                                        .font(Theme.Fonts.body(size: 10))
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                                Text(user.referralCode)
+                                    .font(Theme.Fonts.display(size: 20))
+                                    .foregroundStyle(.white)
+                                    .lineLimit(1)
+                                
+                                Text("Tap to copy")
+                                    .font(Theme.Fonts.body(size: 10))
+                                    .foregroundStyle(.gray)
+                            }
+                            .padding(16)
+                            .frame(width: 140, height: 100)
+                            .background(Color.theme.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+                
+                // Active Campaigns
+                let campaigns = loyaltyManager.checkCampaigns(for: user)
+                if !campaigns.isEmpty {
+                    ForEach(campaigns) { campaign in
+                        HStack(spacing: 16) {
+                            Image(systemName: "gift.fill")
+                                .font(.title2)
+                                .foregroundStyle(.pink)
+                                .frame(width: 40)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(campaign.title)
+                                    .font(Theme.Fonts.body(size: 14))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(.white)
+                                
+                                Text(campaign.message)
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(.gray)
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding(16)
+                        .background(Color.theme.surface.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.horizontal, 20)
+                    }
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -518,6 +680,16 @@ struct ProfileView: View {
                     .padding(.leading, 64)
                 
                 Button {
+                    showKYC = true
+                } label: {
+                    SettingRow(icon: "checkmark.seal", title: "Identity Verification")
+                }
+                
+                Divider()
+                    .background(Color.theme.surface)
+                    .padding(.leading, 64)
+                
+                Button {
                     showPrivacy = true
                 } label: {
                     SettingRow(icon: "lock", title: "Privacy & Security")
@@ -541,6 +713,64 @@ struct ProfileView: View {
                     showLogoutAlert = true
                 } label: {
                     SettingRow(icon: "arrow.right.square", title: "Logout", color: .red)
+                }
+            }
+        }
+    }
+    
+    private var developerSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SectionHeader(title: "DEVELOPER")
+            
+            VStack(spacing: 12) {
+                Text("Current Role: \(authManager.userRole.rawValue.uppercased())")
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.gray)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        Button {
+                            Task { try? await authManager.updateRole(to: .user) }
+                        } label: {
+                            Text("User")
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(authManager.userRole == .user ? .black : .white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(authManager.userRole == .user ? .white : Color.theme.surface)
+                                .clipShape(Capsule())
+                        }
+                        
+                        Button {
+                            Task { try? await authManager.updateRole(to: .promoter) }
+                        } label: {
+                            Text("Promoter")
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(authManager.userRole == .promoter ? .black : .white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(authManager.userRole == .promoter ? .white : Color.theme.surface)
+                                .clipShape(Capsule())
+                        }
+                        
+                        Button {
+                            Task { try? await authManager.updateRole(to: .admin) }
+                        } label: {
+                            Text("Admin")
+                                .font(Theme.Fonts.body(size: 12))
+                                .fontWeight(.bold)
+                                .foregroundStyle(authManager.userRole == .admin ? .black : .white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(authManager.userRole == .admin ? .white : Color.theme.surface)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
             }
         }
@@ -772,7 +1002,8 @@ struct OnboardingView: View {
                     generator.impactOccurred()
                     
                     withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                        isLoggedIn = true
+                        // Flip off onboarding so we route into auth/main flow
+                        isLoggedIn = false
                     }
                 } label: {
                     HStack(spacing: 12) {

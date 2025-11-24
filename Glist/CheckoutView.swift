@@ -6,6 +6,7 @@ struct CheckoutView: View {
     let date: Date
     
     @Environment(\.dismiss) var dismiss
+    @Environment(\.locale) private var locale
     @EnvironmentObject var authManager: AuthManager
     @StateObject private var bookingManager = BookingManager()
     @StateObject private var paymentManager = PaymentManager()
@@ -30,7 +31,7 @@ struct CheckoutView: View {
                     VStack(spacing: 24) {
                         // Summary Card
                         VStack(spacing: 20) {
-                            Text("BOOKING SUMMARY")
+                            Text(LocalizedStringKey("booking_summary"))
                                 .font(Theme.Fonts.body(size: 12))
                                 .fontWeight(.bold)
                                 .foregroundStyle(.gray)
@@ -49,7 +50,7 @@ struct CheckoutView: View {
                                 .background(Color.gray.opacity(0.3))
                             
                             HStack {
-                                Text("Date")
+                                Text(LocalizedStringKey("date_label"))
                                     .foregroundStyle(.gray)
                                 Spacer()
                                 Text(date.formatted(date: .long, time: .omitted))
@@ -58,7 +59,7 @@ struct CheckoutView: View {
                             .font(Theme.Fonts.body(size: 14))
                             
                             HStack {
-                                Text("Guests")
+                                Text(LocalizedStringKey("guests_label"))
                                     .foregroundStyle(.gray)
                                 Spacer()
                                 Text("Up to \(table.capacity)")
@@ -67,10 +68,10 @@ struct CheckoutView: View {
                             .font(Theme.Fonts.body(size: 14))
                             
                             HStack {
-                                Text("Minimum Spend")
+                                Text(LocalizedStringKey("minimum_spend"))
                                     .foregroundStyle(.gray)
                                 Spacer()
-                                Text("$\(Int(table.minimumSpend))")
+                                Text(CurrencyFormatter.aed(table.minimumSpend, locale: locale))
                                     .foregroundStyle(.white)
                             }
                             .font(Theme.Fonts.body(size: 14))
@@ -79,11 +80,11 @@ struct CheckoutView: View {
                                 .background(Color.gray.opacity(0.3))
                             
                             HStack {
-                                Text("Deposit Due Now")
+                                Text(LocalizedStringKey("deposit_due"))
                                     .fontWeight(.bold)
                                     .foregroundStyle(.white)
                                 Spacer()
-                                Text("$\(Int(depositAmount))")
+                                Text(CurrencyFormatter.aed(depositAmount, locale: locale))
                                     .fontWeight(.bold)
                                     .foregroundStyle(.white)
                             }
@@ -124,7 +125,7 @@ struct CheckoutView: View {
                     }
                 }
             }
-            .navigationTitle("Checkout")
+            .navigationTitle(LocalizedStringKey("checkout_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if !showSuccess {

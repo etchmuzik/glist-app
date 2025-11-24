@@ -6,6 +6,7 @@ struct AuthView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var name = ""
+    @State private var referralCode = ""
     @State private var errorMessage = ""
     @State private var isLoading = false
     
@@ -36,7 +37,7 @@ struct AuthView: View {
                             .tracking(8)
                             .foregroundStyle(.white)
                         
-                        Text("DUBAI NIGHTLIFE GUIDE")
+                        Text(LocalizedStringKey("tagline"))
                             .font(Theme.Fonts.body(size: 12))
                             .tracking(4)
                             .foregroundStyle(Color.gray)
@@ -50,7 +51,7 @@ struct AuthView: View {
                                 isLogin = true
                             }
                         } label: {
-                            Text("LOGIN")
+                            Text(LocalizedStringKey("login"))
                                 .font(Theme.Fonts.body(size: 14))
                                 .fontWeight(isLogin ? .bold : .regular)
                                 .foregroundStyle(isLogin ? .white : .gray)
@@ -64,7 +65,7 @@ struct AuthView: View {
                                 isLogin = false
                             }
                         } label: {
-                            Text("SIGN UP")
+                            Text(LocalizedStringKey("signup"))
                                 .font(Theme.Fonts.body(size: 14))
                                 .fontWeight(!isLogin ? .bold : .regular)
                                 .foregroundStyle(!isLogin ? .white : .gray)
@@ -80,26 +81,32 @@ struct AuthView: View {
                     // Form
                     VStack(spacing: 16) {
                         if !isLogin {
+                                CustomTextField(
+                                    icon: "person",
+                                    placeholder: LocalizedStringKey("full_name"),
+                                    text: $name
+                                )
+                                
+                                CustomTextField(
+                                    icon: "tag",
+                                    placeholder: LocalizedStringKey("referral_optional"),
+                                    text: $referralCode
+                                )
+                            }
+                            
                             CustomTextField(
-                                icon: "person",
-                                placeholder: "Full Name",
-                                text: $name
+                                icon: "envelope",
+                                placeholder: LocalizedStringKey("email"),
+                                text: $email,
+                                keyboardType: .emailAddress
                             )
-                        }
-                        
-                        CustomTextField(
-                            icon: "envelope",
-                            placeholder: "Email",
-                            text: $email,
-                            keyboardType: .emailAddress
-                        )
-                        
-                        CustomTextField(
-                            icon: "lock",
-                            placeholder: "Password",
-                            text: $password,
-                            isSecure: true
-                        )
+                            
+                            CustomTextField(
+                                icon: "lock",
+                                placeholder: LocalizedStringKey("password"),
+                                text: $password,
+                                isSecure: true
+                            )
                         
                         if !errorMessage.isEmpty {
                             Text(errorMessage)
@@ -115,7 +122,7 @@ struct AuthView: View {
                                 ProgressView()
                                     .tint(.black)
                             } else {
-                                Text(isLogin ? "LOGIN" : "CREATE ACCOUNT")
+                                Text(isLogin ? LocalizedStringKey("login") : LocalizedStringKey("create_account"))
                                     .font(Theme.Fonts.body(size: 14))
                                     .fontWeight(.bold)
                                     .tracking(2)
@@ -147,11 +154,11 @@ struct AuthView: View {
                     try await authManager.signIn(email: email, password: password)
                 } else {
                     guard !name.isEmpty else {
-                        errorMessage = "Please enter your name"
+                        errorMessage = NSLocalizedString("error_enter_name", comment: "")
                         isLoading = false
                         return
                     }
-                    try await authManager.signUp(email: email, password: password, name: name)
+                    try await authManager.signUp(email: email, password: password, name: name, referralCode: referralCode)
                 }
             } catch {
                 errorMessage = error.localizedDescription
@@ -163,7 +170,7 @@ struct AuthView: View {
 
 struct CustomTextField: View {
     let icon: String
-    let placeholder: String
+    let placeholder: LocalizedStringKey
     @Binding var text: String
     var keyboardType: UIKeyboardType = .default
     var isSecure: Bool = false

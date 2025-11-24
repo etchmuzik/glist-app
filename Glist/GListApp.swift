@@ -29,12 +29,16 @@ struct GListApp: App {
     
     @StateObject private var bookingManager = BookingManager()
     @StateObject private var socialManager = SocialManager()
+    @StateObject private var localeManager = LocalizationManager()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(bookingManager)
                 .environmentObject(socialManager)
+                .environmentObject(localeManager)
+                .environment(\.layoutDirection, localeManager.usesRTL ? .rightToLeft : .leftToRight)
+                .environment(\.locale, localeManager.locale)
         }
     }
 }

@@ -58,10 +58,12 @@ struct AccountSettingsView: View {
 struct NotificationsView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var localeManager: LocalizationManager
     @StateObject private var notificationManager = NotificationManager.shared
     @State private var guestListUpdates = true
     @State private var newVenues = false
     @State private var promotions = false
+    @State private var selectedLanguage: AppLanguage = .english
     
     var body: some View {
         NavigationStack {
@@ -71,19 +73,27 @@ struct NotificationsView: View {
                 Form {
                     Section("STATUS") {
                         HStack {
-                            Text("Push Notifications")
+                            Text("push_notifications")
                             Spacer()
                             Text(notificationManager.isAuthorized ? "On" : "Off")
                                 .foregroundStyle(notificationManager.isAuthorized ? .green : .red)
                         }
                         
                         if !notificationManager.isAuthorized {
-                            Button("Enable in Settings") {
+                            Button("enable_notifications") {
                                 if let url = URL(string: UIApplication.openSettingsURLString) {
                                     UIApplication.shared.open(url)
                                 }
                             }
                         }
+                    }
+                    
+                    Section("LANGUAGE") {
+                        Picker("Language", selection: $selectedLanguage) {
+                            Text("English").tag(AppLanguage.english)
+                            Text("العربية").tag(AppLanguage.arabic)
+                        }
+                        .pickerStyle(.segmented)
                     }
                     
                     Section("PREFERENCES") {
@@ -116,10 +126,14 @@ struct NotificationsView: View {
                     newVenues = prefs.newVenues
                     promotions = prefs.promotions
                 }
+                selectedLanguage = localeManager.language
             }
             .onChange(of: guestListUpdates) { _ in updatePreferences() }
             .onChange(of: newVenues) { _ in updatePreferences() }
             .onChange(of: promotions) { _ in updatePreferences() }
+            .onChange(of: selectedLanguage) { language in
+                localeManager.setLanguage(language)
+            }
         }
     }
     
@@ -199,6 +213,152 @@ struct PrivacyView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - KYC Submission
+
+struct KYCSubmissionView: View {
+    @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var authManager: AuthManager
+    @State private var fullName: String = ""
+    @State private var documentType: String = "Passport"
+    @State private var documentNumber: String = ""
+    @State private var documentFrontURL: String = ""
+    @State private var documentBackURL: String = ""
+    @State private var selfieURL: String = ""
+    @State private var addressProofURL: String = ""
+    @State private var notes: String = ""
+    @State private var isSubmitting = false
+    @State private var showSuccess = false
+    @State private var errorMessage: String?
+    
+    private let documentTypes = ["Passport", "National ID", "Driver License"]
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.theme.background.ignoresSafeArea()
+                
+                Form {
+                    Section("STATUS") {
+                        HStack {
+                            Text("Current Status")
+                            Spacer()
+                            StatusPill(status: authManager.user?.kycStatus ?? .notSubmitted)
+                        }
+                        if let status = authManager.user?.kycStatus, status == .failed {
+                            Text("Your previous submission was rejected. Please re-submit with clear photos and matching details.")
+                                .font(Theme.Fonts.caption())
+                                .foregroundColor(.red)
+                        }
+                    }
+                    
+                    Section("IDENTITY") {
+                        TextField("Full Name", text: $fullName)
+                        Picker("Document Type", selection: $documentType) {
+                            ForEach(documentTypes, id: \.self) { type in
+                                Text(type).tag(type)
+                            }
+                        }
+                        TextField("Document Number", text: $documentNumber)
+                    }
+                    
+                    Section("UPLOAD LINKS") {
+                        TextField("Front of ID (URL)", text: $documentFrontURL)
+                            .textInputAutocapitalization(.never)
+                        TextField("Back of ID (URL)", text: $documentBackURL)
+                            .textInputAutocapitalization(.never)
+                        TextField("Selfie / Live Photo (URL)", text: $selfieURL)
+                            .textInputAutocapitalization(.never)
+                        TextField("Address Proof (Utility Bill, URL)", text: $addressProofURL)
+                            .textInputAutocapitalization(.never)
+                    }
+                    
+                    Section("NOTES") {
+                        TextEditor(text: $notes)
+                            .frame(height: 80)
+                    }
+                    
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .font(Theme.Fonts.caption())
+                    }
+                    
+                    Button {
+                        Task { await submit() }
+                    } label: {
+                        HStack {
+                            if isSubmitting { ProgressView() }
+                            Text(showSuccess ? "Submitted" : "Submit for Review")
+                                .fontWeight(.bold)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .disabled(isSubmitting || authManager.user == nil || documentNumber.isEmpty || fullName.isEmpty)
+                }
+                .scrollContentBackground(.hidden)
+            }
+            .navigationTitle("Identity Verification")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+            }
+            .onAppear {
+                fullName = authManager.user?.name ?? ""
+            }
+        }
+    }
+    
+    private func submit() async {
+        guard let user = authManager.user else {
+            errorMessage = "You must be signed in."
+            return
+        }
+        isSubmitting = true
+        errorMessage = nil
+        showSuccess = false
+        
+        let submission = KYCSubmission(
+            userId: user.id,
+            fullName: fullName,
+            documentType: documentType,
+            documentNumber: documentNumber,
+            documentFrontURL: documentFrontURL.isEmpty ? nil : documentFrontURL,
+            documentBackURL: documentBackURL.isEmpty ? nil : documentBackURL,
+            selfieURL: selfieURL.isEmpty ? nil : selfieURL,
+            addressProofURL: addressProofURL.isEmpty ? nil : addressProofURL,
+            status: .pending,
+            notes: notes.isEmpty ? nil : notes
+        )
+        
+        do {
+            try await FirestoreManager.shared.submitKYC(submission)
+            await authManager.fetchUserRole(userId: user.id)
+            showSuccess = true
+        } catch {
+            errorMessage = "Failed to submit: \(error.localizedDescription)"
+        }
+        
+        isSubmitting = false
+    }
+}
+
+struct StatusPill: View {
+    let status: KYCStatus
+    
+    var body: some View {
+        Text(status.badgeText)
+            .font(Theme.Fonts.body(size: 12))
+            .fontWeight(.bold)
+            .foregroundStyle(status.badgeColor)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(status.badgeColor.opacity(0.15))
+            .clipShape(Capsule())
     }
 }
 

@@ -9,11 +9,31 @@ struct Theme {
     
     struct Fonts {
         static func display(size: CGFloat) -> Font {
-            .system(size: size, weight: .bold, design: .default)
+            if Locale.current.language.languageCode?.identifier == "ar" {
+                return .system(size: size, weight: .bold, design: .rounded)
+            }
+            return .system(size: size, weight: .bold, design: .default)
         }
         
         static func body(size: CGFloat) -> Font {
-            .system(size: size, weight: .regular, design: .default)
+            if Locale.current.language.languageCode?.identifier == "ar" {
+                return .system(size: size, weight: .regular, design: .rounded)
+            }
+            return .system(size: size, weight: .regular, design: .default)
+        }
+        
+        static func bodyBold(size: CGFloat = 14) -> Font {
+            if Locale.current.language.languageCode?.identifier == "ar" {
+                return .system(size: size, weight: .bold, design: .rounded)
+            }
+            return .system(size: size, weight: .bold, design: .default)
+        }
+        
+        static func caption(size: CGFloat = 12) -> Font {
+            if Locale.current.language.languageCode?.identifier == "ar" {
+                return .system(size: size, weight: .regular, design: .rounded)
+            }
+            return .system(size: size, weight: .regular, design: .default)
         }
     }
 }

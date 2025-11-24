@@ -38,7 +38,7 @@ class BookingManager: ObservableObject {
             tableName: table.name,
             date: date,
             depositAmount: depositAmount,
-            status: .pending,
+            status: .holdPending,
             createdAt: Date()
         )
         
@@ -46,6 +46,21 @@ class BookingManager: ObservableObject {
         // For now, we assume payment is successful and save the booking
         
         try await FirestoreManager.shared.createBooking(newBooking)
+        
+        // Award Loyalty Points
+        try await FirestoreManager.shared.addRewardPoints(userId: userId, points: LoyaltyManager.pointsPerBooking)
+        
+        // Schedule Reminder
+        NotificationManager.shared.scheduleBookingReminder(for: newBooking)
+        
+        // Log Activity
+        SocialManager.shared.logActivity(
+            userId: userId,
+            type: .booking,
+            title: "Booked a table",
+            subtitle: "at \(venue.name)",
+            relatedId: venue.id.uuidString
+        )
         
         // Refresh bookings
         fetchUserBookings(userId: userId)
