@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ChatListView: View {
-    @StateObject private var chatManager = ConciergeChatManager.shared
+    @EnvironmentObject var chatManager: ConciergeChatManager
     @EnvironmentObject var authManager: AuthManager
     @State private var selectedThread: ChatThread?
 

@@ -4,10 +4,17 @@ struct VenueDetailView: View {
     let venue: Venue
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authManager: AuthManager
-    @StateObject private var socialManager = SocialManager()
+    @EnvironmentObject var socialManager: SocialManager
     @State private var showGuestListSheet = false
     @State private var showTableBooking = false
     @State private var selectedEvent: Event?
+    
+    @State private var showTickets = false
+    @State private var selectedTicket: TicketOption? = nil
+    @State private var showApplePay = false
+    @State private var applePayAmount: Double = 0
+    @State private var applePayDescription: String = ""
+    @StateObject private var ticketManager = TicketManager()
     
     private var isUserRestricted: Bool {
         authManager.user?.isBanned == true || authManager.user?.isSoftBanned == true
@@ -75,6 +82,26 @@ struct VenueDetailView: View {
                         }
                     }
                     
+                    // Features
+                    if !venue.tags.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(venue.tags, id: \.self) { tag in
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "sparkles")
+                                        Text(tag)
+                                            .font(Theme.Fonts.body(size: 12))
+                                    }
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.theme.surface.opacity(0.5))
+                                    .clipShape(Capsule())
+                                }
+                            }
+                        }
+                    }
+                    
                     // Action Buttons
                     VStack(spacing: 12) {
                         if let user = authManager.user {
@@ -96,6 +123,20 @@ struct VenueDetailView: View {
                                 showGuestListSheet = true
                             } label: {
                                 Text(LocalizedStringKey("join_guest_list"))
+                                    .font(Theme.Fonts.body(size: 14))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Color.black)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 0))
+                            }
+                            .disabled(isUserRestricted)
+                            
+                            Button {
+                                showTickets = true
+                            } label: {
+                                Text(LocalizedStringKey("buy_tickets"))
                                     .font(Theme.Fonts.body(size: 14))
                                     .fontWeight(.bold)
                                     .foregroundStyle(Color.black)
@@ -213,7 +254,7 @@ struct VenueDetailView: View {
                         }
                     }
                     
-
+                    
                     
                     // Weekly Schedule
                     if !venue.weeklySchedule.isEmpty {
@@ -243,55 +284,6 @@ struct VenueDetailView: View {
                                 }
                             }
                             .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        .padding(.horizontal, 24)
-                    }
-                    
-                    // Bottle Menu
-                    if !venue.bottleMenu.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(LocalizedStringKey("bottle_menu"))
-                                .font(Theme.Fonts.body(size: 12))
-                                .fontWeight(.bold)
-                                .foregroundStyle(Color.theme.textSecondary)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    ForEach(venue.bottleMenu) { bottle in
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Rectangle()
-                                                .fill(Color.theme.surface)
-                                                .frame(width: 140, height: 140)
-                                                .overlay(
-                                                    Image(systemName: "wineglass.fill")
-                                                        .font(.largeTitle)
-                                                        .foregroundStyle(Color.theme.textSecondary.opacity(0.3))
-                                                )
-                                            
-                                            VStack(alignment: .leading, spacing: 4) {
-                                                Text(bottle.name)
-                                                    .font(Theme.Fonts.body(size: 14))
-                                                    .fontWeight(.medium)
-                                                    .foregroundStyle(Color.theme.textPrimary)
-                                                    .lineLimit(1)
-                                                
-                                                Text(bottle.type)
-                                                    .font(Theme.Fonts.body(size: 12))
-                                                    .foregroundStyle(Color.theme.textSecondary)
-                                                
-                                                Text(bottle.price, format: .currency(code: "AED"))
-                                                    .font(Theme.Fonts.body(size: 14))
-                                                    .fontWeight(.bold)
-                                                    .foregroundStyle(Color.theme.accent)
-                                            }
-                                        }
-                                        .frame(width: 140)
-                                    }
-                                }
-                                .padding(.horizontal, 24)
-                            }
-                            // Reset padding for the container since ScrollView handles horizontal padding
-                            .padding(.horizontal, -24)
                         }
                         .padding(.horizontal, 24)
                     }
@@ -397,7 +389,7 @@ struct VenueDetailView: View {
                                     VerifiedBadge(text: NSLocalizedString("verified_venue", comment: ""))
                                 }
                                 
-                                SafetyPill(icon: "person.badge.checkmark", text: "Age \(venue.minimumAge)+ • ID required")
+                                SafetyPill(icon: "person.badge.shield", text: "Age \(venue.minimumAge)+ • ID required")
                                 SafetyPill(icon: "checkmark.shield", text: NSLocalizedString("venue_policies", comment: ""))
                             }
                             
@@ -408,6 +400,15 @@ struct VenueDetailView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
+                        
+                        // Rules & Policies
+                        let rules = BookingRulesProvider.forVenue(venue)
+                        RulesSectionView(rules: rules)
+                    } else {
+                        // If no safety section, place rules after description
+                        // Rules & Policies
+                        let rules = BookingRulesProvider.forVenue(venue)
+                        RulesSectionView(rules: rules)
                     }
                     
                     // Info Grid
@@ -551,6 +552,65 @@ struct VenueDetailView: View {
             .sheet(isPresented: $showTableBooking) {
                 TableBookingView(venue: venue)
             }
+            .sheet(isPresented: $showTickets) {
+                TicketSelectionView(selectedTicket: $selectedTicket) { ticket in
+                    selectedTicket = ticket
+                    showTickets = false
+                    if !venue.events.isEmpty {
+                        selectedEvent = venue.events.first
+                    } else {
+                        applePayAmount = ticket.price
+                        applePayDescription = "Ticket: \(ticket.name) • \(ticket.phase)"
+                        showApplePay = true
+                    }
+                }
+            }
+            .sheet(isPresented: $showApplePay) {
+                TicketCheckoutView(
+                    venueId: venue.id.uuidString,
+                    venueName: venue.name,
+                    amount: applePayAmount,
+                    description: applePayDescription,
+                    onSuccess: {
+                        Task {
+                            if let userId = authManager.user?.id, let ticketOption = selectedTicket {
+                                let placeholderEvent = Event(
+                                    name: "General Entry",
+                                    date: Date(),
+                                    imageUrl: nil,
+                                    description: "General admission to \(venue.name)"
+                                )
+                                
+                                let ticketType = TicketType(
+                                    id: UUID(),
+                                    name: ticketOption.name,
+                                    price: ticketOption.price,
+                                    totalQuantity: 999,
+                                    availableQuantity: 999,
+                                    description: ticketOption.phase
+                                )
+                                
+                                do {
+                                    _ = try await ticketManager.purchaseTicket(
+                                        userId: userId,
+                                        event: placeholderEvent,
+                                        venue: venue,
+                                        ticketType: ticketType,
+                                        quantity: 1
+                                    )
+                                    print("Ticket created successfully via Apple Pay fallback")
+                                } catch {
+                                    print("Failed to create ticket after payment: \(error)")
+                                }
+                            }
+                            showApplePay = false
+                        }
+                    },
+                    onCancel: {
+                        showApplePay = false
+                    }
+                )
+            }
         
     }
     }
@@ -565,6 +625,7 @@ struct GuestListFormView: View {
     @State private var name = ""
     @State private var email = ""
     @State private var guests = 1
+    @State private var guestNames: [String] = []
     @State private var date = Date()
     @State private var showSuccess = false
     
@@ -576,6 +637,7 @@ struct GuestListFormView: View {
                 if showSuccess {
                     VStack(spacing: 20) {
                         Image(systemName: "checkmark.circle.fill")
+                        // ... (success view content remains same)
                             .font(.system(size: 60))
                             .foregroundStyle(.white)
                         Text(LocalizedStringKey("request_sent"))
@@ -613,11 +675,38 @@ struct GuestListFormView: View {
                         Section {
                             DatePicker(LocalizedStringKey("Date"), selection: $date, displayedComponents: .date)
                             Stepper("Guests: \(guests)", value: $guests, in: 1...10)
+                                .onChange(of: guests) { _, newValue in
+                                    // Adjust guestNames array size
+                                    if newValue > 1 {
+                                        let additionalGuests = newValue - 1
+                                        if guestNames.count < additionalGuests {
+                                            guestNames.append(contentsOf: Array(repeating: "", count: additionalGuests - guestNames.count))
+                                        } else if guestNames.count > additionalGuests {
+                                            guestNames.removeLast(guestNames.count - additionalGuests)
+                                        }
+                                    } else {
+                                        guestNames.removeAll()
+                                    }
+                                }
+                            
+                            if guests > 1 {
+                                ForEach(0..<guestNames.count, id: \.self) { index in
+                                    TextField("Guest \(index + 2) Name", text: $guestNames[index])
+                                }
+                            }
                         } header: {
                             Text(LocalizedStringKey("reservation"))
                         }
                     }
                     .scrollContentBackground(.hidden)
+                    
+                    // Policies for Guest List
+                    let rules = BookingRulesProvider.forGuestList(venue)
+                    PolicyDisclosureRow(
+                        rules: rules,
+                        contextText: "By submitting, you agree to: ID • Entry Policy • No-show policy"
+                    )
+                    .padding()
                 }
             }
             .navigationTitle(showSuccess ? "" : "JOIN GUEST LIST")
@@ -646,7 +735,8 @@ struct GuestListFormView: View {
                                         name: name,
                                         email: email,
                                         date: date,
-                                        guestCount: guests
+                                        guestCount: guests,
+                                        guestNames: guestNames // Pass guest names
                                     )
                                     
                                     await MainActor.run {
@@ -661,7 +751,7 @@ struct GuestListFormView: View {
                         }
                         .fontWeight(.bold)
                         .foregroundStyle(.white)
-                        .disabled(name.isEmpty || email.isEmpty || authManager.user?.isBanned == true || authManager.user?.isSoftBanned == true)
+                        .disabled(name.isEmpty || email.isEmpty || (guests > 1 && guestNames.contains(where: { $0.isEmpty })) || authManager.user?.isBanned == true || authManager.user?.isSoftBanned == true)
                     }
                 }
             }
@@ -787,5 +877,155 @@ struct FlowLayout<Data: RandomAccessCollection, Content: View>: View where Data.
             }
             return .clear
         }
+    }
+}
+
+// MARK: - Tickets
+
+struct TicketOption: Identifiable, Equatable {
+    let id = UUID()
+    let name: String
+    let phase: String
+    let price: Double
+}
+
+struct TicketSelectionView: View {
+    @Binding var selectedTicket: TicketOption?
+    let onContinue: (TicketOption) -> Void
+    
+    private let ticketOptions: [TicketOption] = [
+        TicketOption(name: "GA Early Bird", phase: "Early Bird", price: 150),
+        TicketOption(name: "GA", phase: "General Admission", price: 200),
+        TicketOption(name: "VIP Presale", phase: "Presale", price: 350),
+        TicketOption(name: "VIP", phase: "VIP", price: 450)
+    ]
+    
+    @Environment(\.dismiss) var dismiss
+    
+    @State private var quantity: Int = 1
+    private let serviceFeeRate: Double = 0.05
+    private let processingFee: Double = 3.0
+    
+    private var subtotal: Double {
+        (selectedTicket?.price ?? 0) * Double(quantity)
+    }
+    private var serviceFee: Double {
+        subtotal * serviceFeeRate
+    }
+    private var total: Double {
+        subtotal + serviceFee + processingFee
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                List(ticketOptions, id: \.id) { option in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(option.name)
+                                .font(Theme.Fonts.body(size: 16))
+                                .foregroundStyle(Color.theme.textPrimary)
+                            Text("\(Int(option.price)) AED")
+                                .font(Theme.Fonts.body(size: 14))
+                                .foregroundStyle(Color.theme.textSecondary)
+                        }
+                        Spacer()
+                        if selectedTicket == option {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(Color.theme.accent)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .listRowBackground(Color.theme.surface.opacity(0.3))
+                    .onTapGesture {
+                        selectedTicket = option
+                        quantity = 1
+                    }
+                }
+                .listStyle(.plain)
+                .frame(height: 260)
+                
+                if selectedTicket != nil {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text(LocalizedStringKey("quantity"))
+                                .font(Theme.Fonts.body(size: 16))
+                                .foregroundStyle(Color.theme.textPrimary)
+                            Spacer()
+                            Stepper(value: $quantity, in: 1...10) {
+                                Text("\(quantity)")
+                                    .font(Theme.Fonts.body(size: 16))
+                                    .foregroundStyle(Color.theme.textPrimary)
+                                    .frame(width: 40)
+                            }
+                            .labelsHidden()
+                        }
+                        .padding()
+                        .background(Color.theme.surface.opacity(0.3))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(LocalizedStringKey("subtotal"))
+                                Spacer()
+                                Text("\(Int(subtotal)) AED")
+                            }
+                            HStack {
+                                Text(LocalizedStringKey("service_fee")) + Text(" (5%)")
+                                Spacer()
+                                Text("\(String(format: "%.2f", serviceFee)) AED")
+                            }
+                            HStack {
+                                Text(LocalizedStringKey("processing"))
+                                Spacer()
+                                Text("\(String(format: "%.2f", processingFee)) AED")
+                            }
+                            Divider()
+                                .background(Color.theme.textSecondary)
+                            HStack {
+                                Text(LocalizedStringKey("total"))
+                                    .fontWeight(.bold)
+                                Spacer()
+                                Text("\(String(format: "%.2f", total)) AED")
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Color.theme.accent)
+                            }
+                        }
+                        .font(Theme.Fonts.body(size: 14))
+                        .foregroundStyle(Color.theme.textPrimary)
+                        .padding()
+                        .background(Color.theme.surface.opacity(0.3))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.horizontal, 16)
+                }
+                
+                Spacer()
+            }
+            .navigationTitle(LocalizedStringKey("select_ticket"))
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(LocalizedStringKey("cancel")) {
+                        dismiss()
+                    }
+                    .foregroundStyle(.white)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Continue – \(CurrencyFormatter.aed(total))") {
+                        if let ticket = selectedTicket {
+                            let ticketWithFees = TicketOption(name: ticket.name, phase: ticket.phase, price: total)
+                            onContinue(ticketWithFees)
+                            dismiss()
+                        }
+                    }
+                    .foregroundStyle(selectedTicket == nil ? .gray : .white)
+                    .disabled(selectedTicket == nil)
+                    .fontWeight(.bold)
+                }
+            }
+            .background(Color.theme.background)
+            .scrollContentBackground(.hidden)
+        }
+        .preferredColorScheme(.dark)
     }
 }

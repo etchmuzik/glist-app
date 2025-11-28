@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import Combine
 
+@MainActor
 class InviteManager: ObservableObject {
     @Published var inviteCode: String = ""
     @Published var inviteCount: Int = 0

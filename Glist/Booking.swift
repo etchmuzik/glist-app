@@ -1,6 +1,6 @@
 import Foundation
 
-enum BookingStatus: String, Codable {
+enum BookingStatus: String, Codable, Sendable {
     case pending = "Pending"
     case holdPending = "Hold Pending"
     case confirmed = "Confirmed"
@@ -11,7 +11,7 @@ enum BookingStatus: String, Codable {
     case cancelled = "Cancelled"
 }
 
-struct Booking: Identifiable, Codable {
+struct Booking: Identifiable, Codable, Sendable {
     let id: UUID
     let userId: String
     let venueId: String

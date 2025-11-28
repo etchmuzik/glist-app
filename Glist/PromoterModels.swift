@@ -1,6 +1,6 @@
 import Foundation
 
-struct Promoter: Identifiable, Codable {
+struct Promoter: Identifiable, Codable, Sendable {
     let id: String
     let userId: String
     let name: String
@@ -26,7 +26,7 @@ struct Promoter: Identifiable, Codable {
     }
 }
 
-struct Commission: Identifiable, Codable {
+struct Commission: Identifiable, Codable, Sendable {
     let id: String
     let promoterId: String
     let promoterName: String
@@ -36,8 +36,9 @@ struct Commission: Identifiable, Codable {
     let amount: Double
     var status: CommissionStatus
     let date: Date
+    var payout: CommissionPayout?
     
-    init(id: String = UUID().uuidString, promoterId: String, promoterName: String, bookingId: String? = nil, guestListId: String? = nil, venueName: String, amount: Double, status: CommissionStatus = .pending, date: Date = Date()) {
+    init(id: String = UUID().uuidString, promoterId: String, promoterName: String, bookingId: String? = nil, guestListId: String? = nil, venueName: String, amount: Double, status: CommissionStatus = .pending, date: Date = Date(), payout: CommissionPayout? = nil) {
         self.id = id
         self.promoterId = promoterId
         self.promoterName = promoterName
@@ -47,16 +48,50 @@ struct Commission: Identifiable, Codable {
         self.amount = amount
         self.status = status
         self.date = date
+        self.payout = payout
     }
 }
 
-enum CommissionStatus: String, Codable {
+enum CommissionStatus: String, Codable, Sendable {
     case pending = "Pending"
     case paid = "Paid"
     case cancelled = "Cancelled"
 }
 
-struct VenueAnalytics: Identifiable, Codable {
+struct CommissionPayout: Identifiable, Codable, Sendable {
+    let id: String
+    let method: PayoutMethod
+    let amount: Double
+    let createdAt: Date
+    var processedAt: Date?
+    var status: PayoutStatus
+    var notes: String?
+    
+    init(id: String = UUID().uuidString, method: PayoutMethod, amount: Double, createdAt: Date = Date(), processedAt: Date? = nil, status: PayoutStatus = .queued, notes: String? = nil) {
+        self.id = id
+        self.method = method
+        self.amount = amount
+        self.createdAt = createdAt
+        self.processedAt = processedAt
+        self.status = status
+        self.notes = notes
+    }
+}
+
+enum PayoutMethod: String, Codable, CaseIterable, Sendable {
+    case stripe = "Stripe"
+    case bank = "Bank Transfer"
+    case wallet = "Wallet"
+}
+
+enum PayoutStatus: String, Codable, Sendable {
+    case queued = "Queued"
+    case processing = "Processing"
+    case paid = "Paid"
+    case failed = "Failed"
+}
+
+struct VenueAnalytics: Identifiable, Codable, Sendable {
     let id: String
     let venueId: String
     let venueName: String
@@ -86,7 +121,7 @@ struct VenueAnalytics: Identifiable, Codable {
     }
 }
 
-enum AnalyticsPeriod: String, Codable {
+enum AnalyticsPeriod: String, Codable, Sendable {
     case day = "Day"
     case week = "Week"
     case month = "Month"

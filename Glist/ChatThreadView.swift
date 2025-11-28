@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ChatThreadView: View {
     let thread: ChatThread
-    @StateObject private var chatManager = ConciergeChatManager.shared
+    @EnvironmentObject var chatManager: ConciergeChatManager
     @EnvironmentObject var authManager: AuthManager
     @State private var messageText = ""
     @State private var isTyping = false
@@ -134,7 +134,7 @@ struct MessagesView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
-                .onChange(of: chatManager.messages.count) { _ in
+                .onChange(of: chatManager.messages.count) { _, _ in
                     if let lastMessage = chatManager.messages.last {
                         withAnimation {
                             scrollView.scrollTo(lastMessage.id, anchor: .bottom)

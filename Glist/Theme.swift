@@ -15,11 +15,11 @@ struct Theme {
             return .system(size: size, weight: .bold, design: .default)
         }
         
-        static func body(size: CGFloat) -> Font {
+        static func body(size: CGFloat, weight: Font.Weight = .regular) -> Font {
             if Locale.current.language.languageCode?.identifier == "ar" {
-                return .system(size: size, weight: .regular, design: .rounded)
+                return .system(size: size, weight: weight, design: .rounded)
             }
-            return .system(size: size, weight: .regular, design: .default)
+            return .system(size: size, weight: weight, design: .default)
         }
         
         static func bodyBold(size: CGFloat = 14) -> Font {

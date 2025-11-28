@@ -1,6 +1,6 @@
 import Foundation
 
-enum PassServiceError: LocalizedError {
+enum PassServiceError: LocalizedError, Sendable {
     case invalidBaseURL
     case badResponse(Int)
     case invalidContentType
@@ -17,7 +17,7 @@ enum PassServiceError: LocalizedError {
     }
 }
 
-final class PassService {
+final class PassService: Sendable {
     static let shared = PassService()
     private let session: URLSession
     

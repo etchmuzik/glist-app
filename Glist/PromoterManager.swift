@@ -1,8 +1,9 @@
 import Foundation
 import SwiftUI
 import Combine
-import FirebaseFirestore
+import Supabase
 
+@MainActor
 class PromoterManager: ObservableObject {
     @Published var promoter: Promoter?
     @Published var commissions: [Commission] = []
@@ -11,7 +12,7 @@ class PromoterManager: ObservableObject {
     @Published var totalEarnings: Double = 0
     @Published var pendingEarnings: Double = 0
     
-    private let db = FirestoreManager.shared.db
+    private let client = SupabaseManager.shared.client
     
     func fetchPromoterData(userId: String) async {
         isLoading = true
@@ -40,12 +41,37 @@ class PromoterManager: ObservableObject {
             print("Error fetching promoter data: \(error)")
             await MainActor.run {
                 isLoading = false
+            }
+        }
+    }
+
+    func fetchAllCommissions(limit: Int = 100) async {
+        isLoading = true
+        do {
+            let fetchedCommissions: [Commission] = try await client
+                .from("commissions")
+                .select()
+                .order("date", ascending: false)
+                .limit(limit)
+                .execute()
+                .value
+            
+            await MainActor.run {
+                self.commissions = fetchedCommissions
+                self.isLoading = false
+            }
+        } catch {
+            print("Error fetching all commissions: \(error)")
+            await MainActor.run { self.isLoading = false }
         }
     }
     
     func updateReputation(promoterId: String, newScore: Int, venueId: String? = nil, reason: String = "manual_adjust") async throws {
-        let promoterRef = db.collection("promoters").document(promoterId)
-        try await promoterRef.updateData(["reputationScore": newScore])
+        try await client
+            .from("promoters")
+            .update(["reputation_score": newScore])
+            .eq("id", value: promoterId)
+            .execute()
         
         let event = SafetyEvent(
             type: .promoterReputationChange,
@@ -56,7 +82,7 @@ class PromoterManager: ObservableObject {
             newValue: "\(newScore)",
             metadata: ["reason": reason]
         )
-        try await FirestoreManager.shared.logSafetyEvent(event)
+        try await SupabaseDataManager.shared.logSafetyEvent(event)
         
         if promoter?.id == promoterId {
             await MainActor.run {
@@ -64,51 +90,27 @@ class PromoterManager: ObservableObject {
             }
         }
     }
-}
-    
+
     private func fetchPromoter(userId: String) async throws -> Promoter? {
-        let snapshot = try await db.collection("promoters")
-            .whereField("userId", isEqualTo: userId)
-            .getDocuments()
+        let promoters: [Promoter] = try await client
+            .from("promoters")
+            .select()
+            .eq("user_id", value: userId)
+            .execute()
+            .value
         
-        guard let doc = snapshot.documents.first else { return nil }
-        let data = doc.data()
-        
-            return Promoter(
-                id: doc.documentID,
-                userId: data["userId"] as? String ?? "",
-                name: data["name"] as? String ?? "",
-                commissionRate: data["commissionRate"] as? Double ?? 0.10,
-                venueIds: data["venueIds"] as? [String] ?? [],
-                totalEarnings: data["totalEarnings"] as? Double ?? 0,
-                activeGuestLists: data["activeGuestLists"] as? Int ?? 0,
-                reputationScore: data["reputationScore"] as? Int ?? 80,
-                kycStatus: KYCStatus(rawValue: data["kycStatus"] as? String ?? "") ?? .pending,
-                createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
-            )
-        }
+        return promoters.first
+    }
     
     private func fetchCommissions(promoterId: String) async throws {
-        let snapshot = try await db.collection("commissions")
-            .whereField("promoterId", isEqualTo: promoterId)
-            .order(by: "date", descending: true)
-            .limit(to: 50)
-            .getDocuments()
-        
-        let fetchedCommissions = snapshot.documents.compactMap { doc -> Commission? in
-            let data = doc.data()
-            return Commission(
-                id: doc.documentID,
-                promoterId: data["promoterId"] as? String ?? "",
-                promoterName: data["promoterName"] as? String ?? "",
-                bookingId: data["bookingId"] as? String,
-                guestListId: data["guestListId"] as? String,
-                venueName: data["venueName"] as? String ?? "",
-                amount: data["amount"] as? Double ?? 0,
-                status: CommissionStatus(rawValue: data["status"] as? String ?? "Pending") ?? .pending,
-                date: (data["date"] as? Timestamp)?.dateValue() ?? Date()
-            )
-        }
+        let fetchedCommissions: [Commission] = try await client
+            .from("commissions")
+            .select()
+            .eq("promoter_id", value: promoterId)
+            .order("date", ascending: false)
+            .limit(50)
+            .execute()
+            .value
         
         await MainActor.run {
             self.commissions = fetchedCommissions
@@ -116,27 +118,14 @@ class PromoterManager: ObservableObject {
     }
     
     private func fetchPromoterGuestLists(promoterId: String) async throws {
-        let snapshot = try await db.collection("guestListRequests")
-            .whereField("promoterId", isEqualTo: promoterId)
-            .whereField("date", isGreaterThan: Date())
-            .order(by: "date", descending: false)
-            .getDocuments()
-        
-        let fetchedLists = snapshot.documents.compactMap { doc -> GuestListRequest? in
-            let data = doc.data()
-            return GuestListRequest(
-                id: UUID(uuidString: doc.documentID) ?? UUID(),
-                userId: data["userId"] as? String ?? "",
-                venueId: data["venueId"] as? String ?? "",
-                venueName: data["venueName"] as? String ?? "",
-                name: data["name"] as? String ?? "",
-                email: data["email"] as? String ?? "",
-                date: (data["date"] as? Timestamp)?.dateValue() ?? Date(),
-                guestCount: data["guestCount"] as? Int ?? 1,
-                status: data["status"] as? String ?? "Pending",
-                qrCodeId: data["qrCodeId"] as? String
-            )
-        }
+        let fetchedLists: [GuestListRequest] = try await client
+            .from("guest_list_requests")
+            .select()
+            .eq("promoter_id", value: promoterId)
+            .gt("date", value: Date())
+            .order("date", ascending: true)
+            .execute()
+            .value
         
         await MainActor.run {
             self.guestLists = fetchedLists
@@ -167,16 +156,27 @@ class PromoterManager: ObservableObject {
             status: .pending
         )
         
-        let commissionData: [String: Any] = [
-            "promoterId": commission.promoterId,
-            "promoterName": commission.promoterName,
-            "bookingId": commission.bookingId ?? "",
-            "venueName": commission.venueName,
-            "amount": commission.amount,
-            "status": commission.status.rawValue,
-            "date": Timestamp(date: commission.date)
-        ]
-        
-        try await db.collection("commissions").document(commission.id).setData(commissionData)
+        try await client.from("commissions").insert(commission).execute()
     }
+
+    func markCommissionPaid(_ commissionId: String, method: PayoutMethod, amount: Double, notes: String? = nil) async throws {
+        let payout = CommissionPayout(method: method, amount: amount, status: .processing, notes: notes)
+        
+        // We need to update both status and payout field.
+        // Since payout is a struct, we might need to encode it or pass it as a dictionary if Supabase expects JSONB.
+        // Assuming Supabase handles Codable struct to JSONB conversion:
+        
+        let payload = UpdatePayload(status: .paid, payout: payout)
+        
+        try await client
+            .from("commissions")
+            .update(payload)
+            .eq("id", value: commissionId)
+            .execute()
+    }
+}
+
+private struct UpdatePayload: Encodable, Sendable {
+    let status: CommissionStatus
+    let payout: CommissionPayout
 }

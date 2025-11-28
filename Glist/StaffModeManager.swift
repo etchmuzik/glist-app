@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import Combine
 
+@MainActor
 final class StaffModeManager: ObservableObject {
     @Published private(set) var binding: DeviceBinding?
     @Published private(set) var lastScans: [ScanEvent] = []

@@ -95,7 +95,12 @@ struct PromoterDashboardView: View {
                                         .foregroundStyle(.gray)
                                     
                                     ForEach(promoterManager.commissions.prefix(10)) { commission in
-                                        CommissionRow(commission: commission)
+                                        CommissionRow(commission: commission) { c in
+                                            Task {
+                                                try? await promoterManager.markCommissionPaid(c.id, method: .bank, amount: c.amount)
+                                                await promoterManager.fetchPromoterData(userId: authManager.user?.id ?? "")
+                                            }
+                                        }
                                     }
                                 }
                                 .padding(.horizontal, 24)
@@ -219,7 +224,9 @@ struct PromoterGuestListCard: View {
 
 struct CommissionRow: View {
     let commission: Commission
+    let onMarkPaid: (Commission) -> Void
     @Environment(\.locale) private var locale
+    @EnvironmentObject var authManager: AuthManager
     
     var body: some View {
         HStack(spacing: 12) {
@@ -242,10 +249,30 @@ struct CommissionRow: View {
                     .fontWeight(.bold)
                     .foregroundStyle(.green)
                 
-            Text(commission.status.rawValue)
-                .font(Theme.Fonts.body(size: 10))
-                .foregroundStyle(commission.status == .paid ? .green : .orange)
-        }
+                Text(commission.status.rawValue)
+                    .font(Theme.Fonts.body(size: 10))
+                    .foregroundStyle(commission.status == .paid ? .green : .orange)
+                
+                if let payout = commission.payout {
+                    Text(payout.status.rawValue)
+                        .font(Theme.Fonts.body(size: 10))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.theme.surface.opacity(0.5))
+                        .clipShape(Capsule())
+                }
+                
+                if commission.status != .paid && authManager.userRole == .admin {
+                    Button("Mark Paid") {
+                        onMarkPaid(commission)
+                    }
+                    .font(Theme.Fonts.body(size: 10))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.theme.accent)
+                    .clipShape(Capsule())
+                }
+            }
         }
         .padding(12)
         .background(Color.theme.surface.opacity(0.5))

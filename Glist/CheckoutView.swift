@@ -1,4 +1,5 @@
 import SwiftUI
+import StripePaymentSheet
 
 struct CheckoutView: View {
     let venue: Venue
@@ -15,10 +16,17 @@ struct CheckoutView: View {
     @State private var showSuccess = false
     @State private var errorMessage: String?
     @State private var transactionId: String?
+    @State private var effectiveMinimumSpend: Double?
+    @State private var isPricingLoading = false
+    @State private var showResaleSheet = false
+    @State private var checkoutResaleMessage: String?
     
     var depositAmount: Double {
-        table.minimumSpend * 0.20
+        let minimum = effectiveMinimumSpend ?? table.minimumSpend
+        return minimum * 0.20
     }
+    
+    @State private var showPaymentSheet = false
     
     var body: some View {
         NavigationStack {
@@ -52,29 +60,43 @@ struct CheckoutView: View {
                             HStack {
                                 Text(LocalizedStringKey("date_label"))
                                     .foregroundStyle(.gray)
+                                    .font(Theme.Fonts.body(size: 14))
                                 Spacer()
                                 Text(date.formatted(date: .long, time: .omitted))
                                     .foregroundStyle(.white)
+                                    .font(Theme.Fonts.body(size: 14))
                             }
-                            .font(Theme.Fonts.body(size: 14))
                             
                             HStack {
                                 Text(LocalizedStringKey("guests_label"))
                                     .foregroundStyle(.gray)
+                                    .font(Theme.Fonts.body(size: 14))
                                 Spacer()
                                 Text("Up to \(table.capacity)")
                                     .foregroundStyle(.white)
+                                    .font(Theme.Fonts.body(size: 14))
                             }
-                            .font(Theme.Fonts.body(size: 14))
                             
                             HStack {
                                 Text(LocalizedStringKey("minimum_spend"))
                                     .foregroundStyle(.gray)
+                                    .font(Theme.Fonts.body(size: 14))
                                 Spacer()
-                                Text(CurrencyFormatter.aed(table.minimumSpend, locale: locale))
+                                Text(CurrencyFormatter.aed(effectiveMinimumSpend ?? table.minimumSpend, locale: locale))
                                     .foregroundStyle(.white)
+                                    .font(Theme.Fonts.body(size: 14))
                             }
-                            .font(Theme.Fonts.body(size: 14))
+                            
+                            if let effectiveMinimumSpend, effectiveMinimumSpend != table.minimumSpend {
+                                Text("F1 weekend pricing applied")
+                                    .font(Theme.Fonts.caption())
+                                    .foregroundStyle(Color.theme.accent)
+                            }
+                            
+                            if isPricingLoading {
+                                ProgressView()
+                                    .tint(.white)
+                            }
                             
                             Divider()
                                 .background(Color.gray.opacity(0.3))
@@ -98,17 +120,25 @@ struct CheckoutView: View {
                         
                         Spacer()
                         
+                        // Policies
+                        let rules = BookingRulesProvider.forVenue(venue)
+                        PolicyDisclosureRow(
+                            rules: rules,
+                            contextText: "By paying, you agree to: ID • Dress Code • Deposit"
+                        )
+                        .padding(.horizontal, 20)
+                        
                         // Payment Button
                         Button {
                             processPayment()
                         } label: {
                             HStack {
-                                if isProcessing {
+                                if isProcessing || paymentManager.status == .preparing {
                                     ProgressView()
                                         .tint(.black)
                                 } else {
-                                    Image(systemName: "apple.logo")
-                                    Text("Pay with Apple Pay")
+                                    Image(systemName: "creditcard.fill")
+                                    Text("Pay Deposit")
                                 }
                             }
                             .font(Theme.Fonts.body(size: 16))
@@ -121,7 +151,54 @@ struct CheckoutView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.bottom, 20)
-                        .disabled(isProcessing)
+                        .disabled(isProcessing || paymentManager.status == .preparing)
+                        
+                        Button {
+                            showResaleSheet = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.2.squarepath")
+                                Text("Plan Resale Offer")
+                            }
+                            .font(Theme.Fonts.body(size: 16, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(Color.theme.surface)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 16)
+                        .disabled(showResaleSheet)
+
+                        // BNPL Option (Tabby)
+                        Button {
+                            processBNPL(provider: .tabby)
+                        } label: {
+                            HStack {
+                                Text("Split in 4 with")
+                                    .font(Theme.Fonts.body(size: 14))
+                                Text("tabby")
+                                    .font(.system(size: 16, weight: .black)) // Tabby logo style
+                                    .foregroundStyle(Color(red: 0.2, green: 0.8, blue: 0.6)) // Tabby green
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.theme.surface)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
+                        .disabled(isProcessing || paymentManager.status == .preparing)
                     }
                 }
             }
@@ -136,6 +213,27 @@ struct CheckoutView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showResaleSheet) {
+                ResaleOfferView(ticket: pendingResaleTicket) { price in
+                    Task {
+                        do {
+                            try await ResaleManager.shared.publishOffer(for: pendingResaleTicket, price: price, pricingRules: ResaleManager.shared.defaultPricingRules)
+                            checkoutResaleMessage = "Resale offer created for \(venue.name)"
+                        } catch {
+                            checkoutResaleMessage = error.localizedDescription
+                        }
+                        showResaleSheet = false
+                    }
+                }
+            }
+            .alert("Resale", isPresented: Binding(
+                get: { checkoutResaleMessage != nil },
+                set: { _ in checkoutResaleMessage = nil }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(checkoutResaleMessage ?? "")
+            }
             .alert("Payment Failed", isPresented: Binding<Bool>(
                 get: { errorMessage != nil },
                 set: { _ in errorMessage = nil }
@@ -144,6 +242,24 @@ struct CheckoutView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .paymentSheet(isPresented: $showPaymentSheet, paymentSheet: paymentManager.paymentSheet!, onCompletion: paymentManager.onPaymentCompletion)
+            .onChange(of: paymentManager.status) { _, newStatus in
+                switch newStatus {
+                case .ready:
+                    showPaymentSheet = true
+                    isProcessing = false
+                case .success(let txnId):
+                    completeBooking(transactionId: txnId)
+                case .failed(let error):
+                    errorMessage = error
+                    isProcessing = false
+                default:
+                    break
+                }
+            }
+        }
+        .task {
+            await recalculatePricing()
         }
     }
     
@@ -153,43 +269,108 @@ struct CheckoutView: View {
         
         Task {
             do {
-                guard let userId = authManager.user?.id else {
-                    throw PaymentError.invalidAmount
-                }
+                try await paymentManager.preparePaymentSheet(
+                    venueId: venue.id.uuidString,
+                    tableId: table.id.uuidString,
+                    amount: depositAmount
+                )
+            } catch {
+                // Error handled by onChange(of: status)
+            }
+        }
+    }
+    
+    private func processBNPL(provider: PaymentsManager.BNPLProvider) {
+        isProcessing = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                guard let userId = authManager.user?.id else { return }
                 
-                // Process payment first
-                let txnId = try await paymentManager.processPayment(
-                    amount: depositAmount,
-                    method: .applePay,
-                    bookingId: UUID().uuidString
+                let request = PaymentsManager.DepositRequest(
+                    amountAED: Decimal(depositAmount),
+                    userId: userId,
+                    venueId: venue.id.uuidString,
+                    tableId: table.id.uuidString,
+                    provider: provider
                 )
                 
-                // If payment succeeds, create booking
+                let (deposit, redirectUrl) = try await PaymentsManager.shared.initiateBNPLDeposit(request: request)
+                try await PaymentsManager.shared.recordDeposit(deposit)
+                
+                await MainActor.run {
+                    isProcessing = false
+                    if let url = redirectUrl {
+                        UIApplication.shared.open(url)
+                    } else {
+                        completeBooking(transactionId: deposit.id ?? "bnpl_pending")
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isProcessing = false
+                    errorMessage = "BNPL Error: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+    
+    private func completeBooking(transactionId: String) {
+        Task {
+            do {
+                guard let userId = authManager.user?.id else { return }
+                
                 try await bookingManager.createBooking(
                     userId: userId,
                     venue: venue,
                     table: table,
-                    date: date
+                    date: date,
+                    status: .confirmed
                 )
                 
                 await MainActor.run {
-                    transactionId = txnId
-                    isProcessing = false
+                    self.transactionId = transactionId
                     withAnimation {
                         showSuccess = true
                     }
                 }
-            } catch let error as PaymentError {
-                await MainActor.run {
-                    errorMessage = error.errorDescription
-                    isProcessing = false
-                }
             } catch {
                 await MainActor.run {
                     errorMessage = "Booking failed: \(error.localizedDescription)"
-                    isProcessing = false
                 }
             }
+        }
+    }
+
+    private var pendingResaleTicket: EventTicket {
+        EventTicket(
+            id: UUID(),
+            eventId: UUID(),
+            eventName: venue.name,
+            eventDate: date,
+            venueId: venue.id,
+            venueName: venue.name,
+            userId: authManager.user?.id ?? "guest",
+            ticketTypeId: table.id,
+            ticketTypeName: table.name,
+            price: effectiveMinimumSpend ?? table.minimumSpend,
+            status: .valid,
+            qrCodeId: UUID().uuidString,
+            purchaseDate: Date()
+        )
+    }
+}
+
+// MARK: - Helpers
+
+extension CheckoutView {
+    private func recalculatePricing() async {
+        isPricingLoading = true
+        let adjusted = await PaymentsManager.shared.adjustedPriceForF1(basePrice: table.minimumSpend, date: date)
+        await MainActor.run {
+            effectiveMinimumSpend = adjusted != table.minimumSpend ? adjusted : nil
+            isPricingLoading = false
         }
     }
 }

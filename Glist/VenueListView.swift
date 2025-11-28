@@ -5,6 +5,7 @@ struct VenueListView: View {
     @EnvironmentObject var localeManager: LocalizationManager
     @State private var searchText = ""
     @State private var selectedDistrict: DubaiDistrict?
+    @State private var selectedCity: String = "Dubai"
     
     var filteredVenues: [Venue] {
         let base = venueManager.venues.filter { venue in
@@ -22,8 +23,42 @@ struct VenueListView: View {
             ZStack {
                 Color.theme.background.ignoresSafeArea()
                 
-                ScrollView {
-                    LazyVStack(spacing: 32) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 32) {
+                        // City + Weather pills
+                        HStack(spacing: 12) {
+                            Capsule()
+                                .fill(Color.white.opacity(0.08))
+                                .overlay(
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "location.fill")
+                                        Text(selectedCity)
+                                        Text("• 24°")
+                                            .foregroundStyle(Color.white.opacity(0.7))
+                                    }
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                )
+                            Spacer()
+                            Capsule()
+                                .fill(Color.white.opacity(0.04))
+                                .overlay(
+                                    HStack(spacing: 8) {
+                                        Text("World")
+                                        Image(systemName: "globe")
+                                    }
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                )
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                        
                         // Header
                         VStack(alignment: .leading, spacing: 8) {
                             Text("dubai_title")
@@ -72,28 +107,56 @@ struct VenueListView: View {
                         
                         // Curated Rails + AI-style Recommendations
                         if searchText.isEmpty && selectedDistrict == nil {
+                            // Happening this week
+                            let weekEvents = venueManager.venues.filter { venue in
+                                venue.events.contains { $0.date > Date().addingTimeInterval(-86400) && $0.date < Date().addingTimeInterval(7 * 86400) }
+                            }
+                            if !weekEvents.isEmpty {
+                                VenueRail(title: "HAPPENING THIS WEEK", venues: weekEvents) {
+                                    withAnimation {
+                                        proxy.scrollTo("allVenuesSection", anchor: .top)
+                                    }
+                                }
+                            }
+                            
                             // AI-powered "Recommended For You" rail (local heuristic engine for now)
                             let recommended = RecommendationEngine.recommendedVenues(from: venueManager.venues, context: .default, limit: 10)
                             if !recommended.isEmpty {
-                                VenueRail(title: "RECOMMENDED FOR YOU", venues: recommended)
+                                VenueRail(title: "RECOMMENDED FOR YOU", venues: recommended) {
+                                    withAnimation {
+                                        proxy.scrollTo("allVenuesSection", anchor: .top)
+                                    }
+                                }
                             }
                             
                             // Tonight Near You (venues with upcoming events)
                             let tonightVenues = venueManager.venues.filter { !$0.events.isEmpty }
                             if !tonightVenues.isEmpty {
-                                VenueRail(title: "TONIGHT NEAR YOU", venues: tonightVenues)
+                                VenueRail(title: "TONIGHT NEAR YOU", venues: tonightVenues) {
+                                    withAnimation {
+                                        proxy.scrollTo("allVenuesSection", anchor: .top)
+                                    }
+                                }
                             }
                             
                             // Premium Lounges
                             let premiumLounges = venueManager.venues.filter { ($0.type.contains("Lounge") || $0.type.contains("Skybar")) && $0.price.count >= 4 }
                             if !premiumLounges.isEmpty {
-                                VenueRail(title: "PREMIUM LOUNGES", venues: premiumLounges)
+                                VenueRail(title: "PREMIUM LOUNGES", venues: premiumLounges) {
+                                    withAnimation {
+                                        proxy.scrollTo("allVenuesSection", anchor: .top)
+                                    }
+                                }
                             }
                             
                             // Trending
                             let trendingVenues = venueManager.venues.filter { $0.isTrending }
                             if !trendingVenues.isEmpty {
-                                VenueRail(title: "TRENDING NOW", venues: trendingVenues)
+                                VenueRail(title: "TRENDING NOW", venues: trendingVenues) {
+                                    withAnimation {
+                                        proxy.scrollTo("allVenuesSection", anchor: .top)
+                                    }
+                                }
                             }
                         }
                         
@@ -122,6 +185,7 @@ struct VenueListView: View {
                                     }
                                 }
                             }
+                            .id("allVenuesSection")
                         }
                     }
                     .padding(.bottom, 40)
@@ -131,17 +195,30 @@ struct VenueListView: View {
     }
 }
 
+}
+
 struct VenueRail: View {
     let title: String
     let venues: [Venue]
+    var onAllTap: (() -> Void)? = nil
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title)
-                .font(Theme.Fonts.body(size: 12))
-                .fontWeight(.bold)
-                .foregroundStyle(Color.theme.textSecondary)
-                .padding(.horizontal, 24)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(title)
+                    .font(Theme.Fonts.body(size: 12))
+                    .fontWeight(.bold)
+                    .foregroundStyle(Color.theme.textSecondary)
+                Spacer()
+                if let onAllTap {
+                    Button("All") {
+                        onAllTap()
+                    }
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(Color.theme.accent)
+                }
+            }
+            .padding(.horizontal, 24)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
@@ -152,8 +229,17 @@ struct VenueRail: View {
                     }
                 }
                 .padding(.horizontal, 24)
+                .padding(.bottom, 8)
             }
         }
+        .padding(.vertical, 14)
+        .background(Color.theme.surface.opacity(0.25))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
     }
 }
 
@@ -162,18 +248,30 @@ struct VenueRailCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Rectangle()
-                .fill(Color.theme.surface)
-                .frame(width: 200, height: 120)
-                .overlay {
-                    Image(systemName: "photo")
-                        .font(.title)
-                        .foregroundStyle(Color.theme.textSecondary.opacity(0.5))
+            AsyncImage(url: URL(string: venue.imageURL ?? "")) { phase in
+                switch phase {
+                case .empty:
+                    ZStack {
+                        LinearGradient(colors: [.white.opacity(0.05), .black.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        ProgressView().tint(.white)
+                    }
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    LinearGradient(colors: [.white.opacity(0.05), .black.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .overlay(Image(systemName: "photo").font(.title).foregroundStyle(.white.opacity(0.6)))
+                @unknown default:
+                    Color.theme.surface
                 }
-                .overlay(alignment: .topTrailing) {
-                    if venue.rating >= 4.8 {
-                        Text(String(format: "%.1f", venue.rating))
-                            .font(Theme.Fonts.body(size: 10))
+            }
+            .frame(width: 220, height: 130)
+            .clipped()
+            .overlay(alignment: .topTrailing) {
+                if venue.rating >= 4.8 {
+                    Text(String(format: "%.1f", venue.rating))
+                        .font(Theme.Fonts.body(size: 10))
                             .fontWeight(.bold)
                             .foregroundStyle(.black)
                             .padding(6)
@@ -221,56 +319,83 @@ struct VenueCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Image Area
-            Rectangle()
-                .fill(Color.theme.surface)
-                .frame(height: 260) // Taller image
-                .overlay {
-                    // Placeholder
-                    LinearGradient(
-                        colors: [.gray.opacity(0.2), .black.opacity(0.9)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    
-                    Image(systemName: "photo")
-                        .font(.largeTitle)
-                        .foregroundStyle(Color.theme.textSecondary.opacity(0.5))
+            AsyncImage(url: URL(string: venue.imageURL ?? "")) { phase in
+                switch phase {
+                case .empty:
+                    ZStack {
+                        LinearGradient(colors: [.gray.opacity(0.2), .black.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        ProgressView().tint(.white)
+                    }
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    LinearGradient(colors: [.gray.opacity(0.2), .black.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .overlay(Image(systemName: "photo").font(.largeTitle).foregroundStyle(.white.opacity(0.6)))
+                @unknown default:
+                    Color.theme.surface
                 }
-                .overlay(alignment: .bottomLeading) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(venue.type.uppercased())
-                                .font(Theme.Fonts.body(size: 10))
-                                .fontWeight(.bold)
-                                .foregroundStyle(.black)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.white)
-                            
-                            if venue.isVerified {
-                                VerifiedBadge(text: "Verified")
-                            }
-                            
-                            Spacer()
-                            
-                            if venue.rating >= 4.8 {
-                                Text("TRENDING")
-                                    .font(Theme.Fonts.body(size: 10))
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.theme.accent)
-                            }
+            }
+            .frame(height: 260) // Taller image
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            )
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(venue.type.uppercased())
+                            .font(Theme.Fonts.body(size: 10))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.black)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.white)
+                        
+                        if venue.isVerified {
+                            VerifiedBadge(text: "Verified")
                         }
                         
-                        Text(venue.name.uppercased())
-                            .font(Theme.Fonts.display(size: 28))
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
+                        Spacer()
+                        
+                        if venue.rating >= 4.8 {
+                            Text("TRENDING")
+                                .font(Theme.Fonts.body(size: 10))
+                                .fontWeight(.bold)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.theme.accent)
+                        }
                     }
-                    .padding(24)
+                    
+                    Text(venue.name.uppercased())
+                        .font(Theme.Fonts.display(size: 28))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
+                    
+                    HStack(spacing: 12) {
+                        Label(venue.district.displayName, systemImage: "mappin.and.ellipse")
+                            .font(Theme.Fonts.body(size: 12))
+                            .foregroundStyle(.white.opacity(0.8))
+                        Label(venue.price, systemImage: "dollarsign.circle")
+                            .font(Theme.Fonts.body(size: 12))
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
                 }
+                .padding(16)
+                .background(
+                    LinearGradient(
+                        colors: [.black.opacity(0.7), .clear],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+            }
+            .padding(.horizontal, 24)
             
             // Info Area
             HStack {
@@ -285,7 +410,6 @@ struct VenueCard: View {
                 Spacer()
                 
                 HStack(spacing: 16) {
-                    // If price represents min spend in AED, you could format here; currently using literal string.
                     Text(venue.price)
                         .font(Theme.Fonts.body(size: 12))
                         .foregroundStyle(Color.theme.textSecondary)
@@ -307,6 +431,5 @@ struct VenueCard: View {
                     .stroke(Color.white.opacity(0.05), lineWidth: 1)
             )
         }
-        .padding(.horizontal, 24)
     }
 }

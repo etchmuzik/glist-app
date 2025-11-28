@@ -7,10 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DEADBEEF0000000000000002 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000001 /* FirebaseMessaging */; };
-		EDD391E22ECFABE0001E84DA /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = EDD391E12ECFABE0001E84DA /* FirebaseAuth */; };
-		EDD391E42ECFABE0001E84DA /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = EDD391E32ECFABE0001E84DA /* FirebaseFirestore */; };
-		EDD391E62ECFABE0001E84DA /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = EDD391E52ECFABE0001E84DA /* FirebaseStorage */; };
+		ED71C5F32ED54FBC003015A4 /* StripePaymentSheet in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C5F22ED54FBC003015A4 /* StripePaymentSheet */; };
+		ED71C60D2ED5D9CE003015A4 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C60C2ED5D9CE003015A4 /* GoogleSignIn */; };
+		ED71C60F2ED5D9CE003015A4 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C60E2ED5D9CE003015A4 /* GoogleSignInSwift */; };
+		ED71C61C2ED62C6A003015A4 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C61B2ED62C6A003015A4 /* Auth */; };
+		ED71C61E2ED62C6A003015A4 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C61D2ED62C6A003015A4 /* Realtime */; };
+		ED71C6202ED62C6A003015A4 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C61F2ED62C6A003015A4 /* Storage */; };
+		ED71C6222ED62C6A003015A4 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = ED71C6212ED62C6A003015A4 /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +34,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		ED71C6152ED5DEB8003015A4 /* hesham_LSTD.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; name = hesham_LSTD.mobileprovision; path = "../../../BEYOND ADS/hesham_LSTD.mobileprovision"; sourceTree = "<group>"; };
 		EDF3E3162EAEE0F3006EC150 /* Glist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Glist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDF3E3272EAEE0F6006EC150 /* GlistTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlistTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EDF3E3312EAEE0F6006EC150 /* GlistUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlistUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -72,10 +76,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EDD391E22ECFABE0001E84DA /* FirebaseAuth in Frameworks */,
-				EDD391E42ECFABE0001E84DA /* FirebaseFirestore in Frameworks */,
-				EDD391E62ECFABE0001E84DA /* FirebaseStorage in Frameworks */,
-				DEADBEEF0000000000000002 /* FirebaseMessaging in Frameworks */,
+				ED71C6222ED62C6A003015A4 /* Supabase in Frameworks */,
+				ED71C61E2ED62C6A003015A4 /* Realtime in Frameworks */,
+				ED71C60F2ED5D9CE003015A4 /* GoogleSignInSwift in Frameworks */,
+				ED71C6202ED62C6A003015A4 /* Storage in Frameworks */,
+				ED71C5F32ED54FBC003015A4 /* StripePaymentSheet in Frameworks */,
+				ED71C61C2ED62C6A003015A4 /* Auth in Frameworks */,
+				ED71C60D2ED5D9CE003015A4 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,12 +103,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		ED71C6142ED5DEB7003015A4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				ED71C6152ED5DEB8003015A4 /* hesham_LSTD.mobileprovision */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		EDF3E30D2EAEE0F3006EC150 = {
 			isa = PBXGroup;
 			children = (
 				EDF3E3182EAEE0F3006EC150 /* Glist */,
 				EDF3E32A2EAEE0F6006EC150 /* GlistTests */,
 				EDF3E3342EAEE0F6006EC150 /* GlistUITests */,
+				ED71C6142ED5DEB7003015A4 /* Frameworks */,
 				EDF3E3172EAEE0F3006EC150 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -136,10 +152,13 @@
 			);
 			name = Glist;
 			packageProductDependencies = (
-				EDD391E12ECFABE0001E84DA /* FirebaseAuth */,
-				EDD391E32ECFABE0001E84DA /* FirebaseFirestore */,
-				EDD391E52ECFABE0001E84DA /* FirebaseStorage */,
-				DEADBEEF0000000000000001 /* FirebaseMessaging */,
+				ED71C5F22ED54FBC003015A4 /* StripePaymentSheet */,
+				ED71C60C2ED5D9CE003015A4 /* GoogleSignIn */,
+				ED71C60E2ED5D9CE003015A4 /* GoogleSignInSwift */,
+				ED71C61B2ED62C6A003015A4 /* Auth */,
+				ED71C61D2ED62C6A003015A4 /* Realtime */,
+				ED71C61F2ED62C6A003015A4 /* Storage */,
+				ED71C6212ED62C6A003015A4 /* Supabase */,
 			);
 			productName = Glist;
 			productReference = EDF3E3162EAEE0F3006EC150 /* Glist.app */;
@@ -225,7 +244,9 @@
 			mainGroup = EDF3E30D2EAEE0F3006EC150;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				ED71C5F12ED54FBC003015A4 /* XCRemoteSwiftPackageReference "stripe-ios" */,
+				ED71C60B2ED5D9CE003015A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				ED71C61A2ED62C6A003015A4 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EDF3E3172EAEE0F3006EC150 /* Products */;
@@ -306,6 +327,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Glist/Glist.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = CHSAVJ5X6U;
@@ -316,8 +339,13 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Glist/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LSTD;
-				INFOPLIST_KEY_NSCameraUsageDescription = "LSTD needs camera access to scan QR codes for guest list verification.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LSTD needs your location to show venues and events near you.";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NFCReaderUsageDescription = "NFC access is required to tap-to-check-in at venues and verify VIP tags";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is required for QR code scanning to check in guests and verify tickets";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access enables venue discovery and check-in verification nearby";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is required to recognize music playing around you";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access for uploading profile pictures and venue photos";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -336,6 +364,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.etch.glist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -354,6 +383,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Glist/Glist.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = CHSAVJ5X6U;
@@ -364,8 +395,13 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Glist/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LSTD;
-				INFOPLIST_KEY_NSCameraUsageDescription = "LSTD needs camera access to scan QR codes for guest list verification.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LSTD needs your location to show venues and events near you.";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NFCReaderUsageDescription = "NFC access is required to tap-to-check-in at venues and verify VIP tags";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is required for QR code scanning to check in guests and verify tickets";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Location access enables venue discovery and check-in verification nearby";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is required to recognize music playing around you";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Photo library access for uploading profile pictures and venue photos";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -384,6 +420,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.etch.glist;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -517,6 +554,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = CHSAVJ5X6U;
@@ -526,6 +564,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = beyond.GlistTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -542,6 +581,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = CHSAVJ5X6U;
@@ -551,6 +591,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = beyond.GlistTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -566,6 +607,7 @@
 		EDF3E3432EAEE0F6006EC150 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = CHSAVJ5X6U;
@@ -575,6 +617,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = beyond.GlistUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -590,6 +633,7 @@
 		EDF3E3442EAEE0F6006EC150 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = CHSAVJ5X6U;
@@ -599,6 +643,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = beyond.GlistUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
@@ -653,36 +698,67 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+		ED71C5F12ED54FBC003015A4 /* XCRemoteSwiftPackageReference "stripe-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			repositoryURL = "https://github.com/stripe/stripe-ios";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 12.6.0;
+				minimumVersion = 25.1.1;
+			};
+		};
+		ED71C60B2ED5D9CE003015A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+		ED71C61A2ED62C6A003015A4 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		DEADBEEF0000000000000001 /* FirebaseMessaging */ = {
+		ED71C5F22ED54FBC003015A4 /* StripePaymentSheet */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
+			package = ED71C5F12ED54FBC003015A4 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripePaymentSheet;
 		};
-		EDD391E12ECFABE0001E84DA /* FirebaseAuth */ = {
+		ED71C60C2ED5D9CE003015A4 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
+			package = ED71C60B2ED5D9CE003015A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
-		EDD391E32ECFABE0001E84DA /* FirebaseFirestore */ = {
+		ED71C60E2ED5D9CE003015A4 /* GoogleSignInSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
+			package = ED71C60B2ED5D9CE003015A4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
-		EDD391E52ECFABE0001E84DA /* FirebaseStorage */ = {
+		ED71C61B2ED62C6A003015A4 /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EDD391E02ECFABE0001E84DA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
+			package = ED71C61A2ED62C6A003015A4 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		ED71C61D2ED62C6A003015A4 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED71C61A2ED62C6A003015A4 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		ED71C61F2ED62C6A003015A4 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED71C61A2ED62C6A003015A4 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		ED71C6212ED62C6A003015A4 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ED71C61A2ED62C6A003015A4 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,15 +1,16 @@
 import Foundation
-import FirebaseFirestore
+import Supabase
 
 /// AI-powered concierge service for intelligent chat responses
+@MainActor
 class AIConciergeService {
     static let shared = AIConciergeService()
 
-    private let db = FirestoreManager.shared.db
+    private let client = SupabaseManager.shared.client
     private var conversationContexts: [String: ConversationContext] = [:]
 
     // Common booking-related intents
-    enum ChatIntent: String {
+    enum ChatIntent: String, Sendable {
         case booking_inquiry = "booking_inquiry"
         case table_availability = "table_availability"
         case price_questions = "price_questions"
@@ -20,7 +21,7 @@ class AIConciergeService {
         case general_help = "general_help"
     }
 
-    struct ConversationContext {
+    struct ConversationContext: Sendable {
         var userId: String
         var currentVenueId: String?
         var mentionedVenues: [String]
@@ -29,7 +30,7 @@ class AIConciergeService {
         var lastActivity: Date
     }
 
-    struct UserPreferences {
+    struct UserPreferences: Sendable {
         var preferredPriceRange: String?
         var preferredVenueTypes: [String]
         var groupSizeTypical: Int?
@@ -155,7 +156,7 @@ class AIConciergeService {
 
         // Check if they already have bookings
         do {
-            let userBookings = try await FirestoreManager.shared.fetchUserBookings(userId: message.senderId)
+            let userBookings = try await SupabaseDataManager.shared.fetchUserBookings(userId: message.senderId)
             let upcomingBookings = userBookings.filter { $0.date > Date() && $0.status != .cancelled }
 
             if let existingBooking = upcomingBookings.first(where: { $0.venueId == thread.venueId }) {
@@ -180,11 +181,13 @@ class AIConciergeService {
         }
 
         do {
-            let recentBookings = try await db.collection("bookings")
-                .whereField("venueId", isEqualTo: venueId)
-                .order(by: "date", descending: true)
+            // Check recent bookings to gauge availability
+            _ = try await client.database.from("bookings")
+                .select()
+                .eq("venue_id", value: venueId)
+                .order("date", ascending: false)
                 .limit(10)
-                .getDocuments()
+                .execute()
 
             let venueName = thread.venueName ?? "the venue"
 
@@ -234,7 +237,7 @@ class AIConciergeService {
 
     private func generateRecommendationsResponse(_ message: ChatMessage, context: ConversationContext, thread: ChatThread) async -> (String, Bool) {
         let venueName = thread.venueName ?? "the venue"
-        let preferences = context.preferences
+        _ = context.preferences
 
         return ("\(venueName) is fantastic! Our signature experience includes amazing music, premium drinks, and excellent service. The atmosphere is truly special after sunset. 🌟", true)
     }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct ConversionStats: Codable, Equatable {
+struct ConversionStats: Codable, Equatable, Sendable {
     let venueId: String
     let venueName: String
     let dateRangeLabel: String
@@ -32,7 +32,7 @@ struct ConversionStats: Codable, Equatable {
     }
 }
 
-struct OccupancySnapshot: Codable, Equatable {
+struct OccupancySnapshot: Codable, Equatable, Sendable {
     let venueId: String
     let venueName: String
     let date: Date
@@ -48,7 +48,7 @@ struct OccupancySnapshot: Codable, Equatable {
     }
 }
 
-struct CancellationStats: Codable, Equatable {
+struct CancellationStats: Codable, Equatable, Sendable {
     let venueId: String
     let venueName: String
     let periodLabel: String
@@ -58,7 +58,7 @@ struct CancellationStats: Codable, Equatable {
     let feesRecovered: Double
 }
 
-struct PromoterPerformanceRow: Codable, Equatable, Identifiable {
+struct PromoterPerformanceRow: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let promoterName: String
     let venueName: String?
@@ -68,7 +68,7 @@ struct PromoterPerformanceRow: Codable, Equatable, Identifiable {
     let payoutPaid: Double
 }
 
-struct CampaignPerformanceRow: Codable, Equatable, Identifiable {
+struct CampaignPerformanceRow: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let campaign: String
     let source: String?
@@ -79,7 +79,7 @@ struct CampaignPerformanceRow: Codable, Equatable, Identifiable {
     let payout: Double
 }
 
-struct Invoice: Codable, Equatable, Identifiable {
+struct Invoice: Codable, Equatable, Identifiable, Sendable {
     let id: String
     let bookingId: String
     let venueName: String
@@ -94,7 +94,7 @@ struct Invoice: Codable, Equatable, Identifiable {
     let totalAmount: Double
 }
 
-struct FinanceReportRow: Codable, Equatable {
+struct FinanceReportRow: Codable, Equatable, Sendable {
     let invoiceNumber: String
     let invoiceDate: Date
     let customerName: String
@@ -111,13 +111,15 @@ struct FinanceReportRow: Codable, Equatable {
     let paymentMethod: String?
 }
 
-enum SafetyEventType: String, Codable {
+enum SafetyEventType: String, Codable, Sendable {
     case noShowIncrement = "no_show_increment"
     case kycStatusChange = "kyc_status_change"
     case promoterReputationChange = "promoter_reputation_change"
+    case resaleOfferCreated = "resale_offer_created"
+    case ticketResold = "ticket_resold"
 }
 
-struct SafetyEvent: Identifiable, Codable {
+struct SafetyEvent: Identifiable, Codable, Sendable {
     let id: String
     let type: SafetyEventType
     let userId: String?

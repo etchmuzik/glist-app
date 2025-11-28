@@ -1,42 +1,137 @@
 import Foundation
-import SwiftUI
 import Combine
-import FirebaseFirestore
 
-class SocialManager: ObservableObject {
+enum ActivityType: String, Codable, CaseIterable, Sendable {
+    case booking
+    case guestList
+    case review
+    case follow
+}
+
+struct ActivityItem: Identifiable, Codable, Sendable {
+    var id = UUID()
+    let userId: String
+    let title: String
+    let subtitle: String
+    let type: ActivityType
+    let timestamp: Date
+}
+
+struct FriendRequest: Identifiable, Codable, Hashable, Sendable {
+    var id = UUID()
+    let fromUserId: String
+    let toUserId: String
+    var status: String = "pending"
+    var createdAt: Date = Date()
+}
+
+/// Lightweight social manager placeholder to keep social flows compiling.
+/// In production, these methods should be backed by Firestore collections.
+@MainActor
+final class SocialManager: ObservableObject {
     static let shared = SocialManager()
-    @Published var followingUsers: [User] = []
-    @Published var followerUsers: [User] = []
+    
     @Published var searchResults: [User] = []
-    @Published var friendsAtVenues: [String: [User]] = [:]
-    @Published var isLoading = false
+    @Published var demoMode: Bool = true
     
-    private let db = FirestoreManager.shared.db
+    private var cachedActivities: [ActivityItem] = []
+    private var pendingRequests: [FriendRequest] = []
+    private var friendsByVenue: [String: [User]] = [:]
+    private var demoSeeded = false
+    private var demoRequestsSeeded = false
+    private let demoUsers: [String: User] = {
+        let now = Date()
+        let baseFavorites: [String] = []
+        return [
+            "demo-friend-1": User(id: "demo-friend-1", email: "laila@example.com", name: "Laila Khalid", role: .user, createdAt: now, favoriteVenueIds: baseFavorites, profileImage: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80", referralCode: "LAILA01"),
+            "demo-friend-2": User(id: "demo-friend-2", email: "omid@example.com", name: "Omid Rahman", role: .user, createdAt: now, favoriteVenueIds: baseFavorites, profileImage: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80", referralCode: "OMID02"),
+            "demo-friend-3": User(id: "demo-friend-3", email: "sara@example.com", name: "Sara Al Mansoori", role: .user, createdAt: now, favoriteVenueIds: baseFavorites, profileImage: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80", referralCode: "SARA03")
+        ]
+    }()
     
-    // MARK: - Follow System
+    init() {}
     
-    func followUser(currentUserId: String, targetUserId: String) async throws {
-        // Add target to current user's following
-        try await db.collection("users").document(currentUserId).updateData([
-            "following": FieldValue.arrayUnion([targetUserId])
-        ])
-        
-        // Add current user to target's followers
-        try await db.collection("users").document(targetUserId).updateData([
-            "followers": FieldValue.arrayUnion([currentUserId])
-        ])
-        
-        // Refresh local data if needed
+    // MARK: - Activity Feed
+    
+    func logActivity(userId: String, type: ActivityType, title: String, subtitle: String, relatedId: String? = nil) {
+        let item = ActivityItem(userId: userId, title: title, subtitle: subtitle, type: type, timestamp: Date())
+        cachedActivities.append(item)
+    }
+    
+    func fetchActivityFeed(followingUserIds: [String]) async throws -> [ActivityItem] {
+        let feed = cachedActivities
+            .filter { followingUserIds.contains($0.userId) }
+            .sorted { $0.timestamp > $1.timestamp }
+        return feed
+    }
+
+    /// Demo feed fallback for empty states.
+    func demoActivities(currentUserId: String) -> [ActivityItem] {
+        guard demoMode else { return [] }
+        if !demoSeeded {
+            cachedActivities.append(contentsOf: [
+                ActivityItem(userId: currentUserId, title: "Booked a table", subtitle: "at Soho Garden", type: .booking, timestamp: Date().addingTimeInterval(-3600)),
+                ActivityItem(userId: currentUserId, title: "Joined guest list", subtitle: "for 1 OAK Dubai", type: .guestList, timestamp: Date().addingTimeInterval(-7200)),
+                ActivityItem(userId: currentUserId, title: "Left a review", subtitle: "for White Dubai", type: .review, timestamp: Date().addingTimeInterval(-10800)),
+                ActivityItem(userId: currentUserId, title: "Followed", subtitle: "BLU Dubai", type: .follow, timestamp: Date().addingTimeInterval(-14400))
+            ])
+            demoSeeded = true
+        }
+        return cachedActivities.sorted { $0.timestamp > $1.timestamp }
+    }
+
+    /// Convenience to seed all demo data at once.
+    func seedDemoDataIfNeeded(currentUserId: String) {
+        guard demoMode else { return }
+        _ = demoActivities(currentUserId: currentUserId)
+        _ = demoFriendRequests(currentUserId: currentUserId)
+    }
+    
+    // MARK: - Friend Requests
+    
+    func fetchPendingRequests(for userId: String) async throws -> [FriendRequest] {
+        pendingRequests.filter { $0.toUserId == userId && $0.status == "pending" }
+    }
+    
+    func sendFriendRequest(currentUserId: String, targetUser: User) async throws {
+        // Avoid duplicates
+        if pendingRequests.contains(where: { $0.fromUserId == currentUserId && $0.toUserId == targetUser.id }) { return }
+        pendingRequests.append(FriendRequest(fromUserId: currentUserId, toUserId: targetUser.id))
+    }
+    
+    func acceptRequest(_ request: FriendRequest) async throws {
+        updateRequest(request, status: "accepted")
+    }
+    
+    func declineRequest(_ request: FriendRequest) async throws {
+        updateRequest(request, status: "declined")
+    }
+    
+    private func updateRequest(_ request: FriendRequest, status: String) {
+        if let idx = pendingRequests.firstIndex(of: request) {
+            pendingRequests[idx].status = status
+        }
     }
     
     func unfollowUser(currentUserId: String, targetUserId: String) async throws {
-        try await db.collection("users").document(currentUserId).updateData([
-            "following": FieldValue.arrayRemove([targetUserId])
-        ])
-        
-        try await db.collection("users").document(targetUserId).updateData([
-            "followers": FieldValue.arrayRemove([currentUserId])
-        ])
+        // Placeholder: no-op for now.
+    }
+
+    /// Demo friend requests fallback for empty states.
+    func demoFriendRequests(currentUserId: String) -> [FriendRequest] {
+        guard demoMode else { return [] }
+        if !demoRequestsSeeded {
+            pendingRequests.append(contentsOf: [
+                FriendRequest(fromUserId: "demo-friend-1", toUserId: currentUserId),
+                FriendRequest(fromUserId: "demo-friend-2", toUserId: currentUserId)
+            ])
+            demoRequestsSeeded = true
+        }
+        return pendingRequests.filter { $0.toUserId == currentUserId && $0.status == "pending" }
+    }
+
+    func demoUser(for id: String) -> User? {
+        demoUsers[id]
     }
     
     // MARK: - Search
@@ -47,188 +142,22 @@ class SocialManager: ObservableObject {
             return
         }
         
-        isLoading = true
-        
         Task {
-            do {
-                let snapshot = try await db.collection("users")
-                    .whereField("name", isGreaterThanOrEqualTo: query)
-                    .whereField("name", isLessThan: query + "z")
-                    .limit(to: 10)
-                    .getDocuments()
-                
-                var users: [User] = []
-                for doc in snapshot.documents {
-                    if let user = try await FirestoreManager.shared.fetchUser(userId: doc.documentID) {
-                        users.append(user)
-                    }
-                }
-                
-                await MainActor.run {
-                    self.searchResults = users
-                    self.isLoading = false
-                }
-            } catch {
-                print("Search error: \(error)")
-                await MainActor.run { self.isLoading = false }
+            // In a full implementation, perform Firestore query. Here we return empty to keep UI responsive.
+            await MainActor.run {
+                self.searchResults = []
             }
         }
     }
     
-    // MARK: - Who's Going
-    
-    func getFriendsAt(venueId: String) -> [User] {
-        return friendsAtVenues[venueId] ?? []
-    }
-    
-    // Backward compatibility property
-    var friendsAtVenue: [User] {
-        return []
-    }
+    // MARK: - Venue Friends
     
     func fetchFriendsGoing(venueId: String, currentUserFollowing: [String]) async {
-        guard !currentUserFollowing.isEmpty else { return }
-        
-        do {
-            // 1. Get bookings for this venue
-            let bookingsSnapshot = try await db.collection("bookings")
-                .whereField("venueId", isEqualTo: venueId)
-                .whereField("date", isGreaterThan: Date())
-                .getDocuments()
-            
-            let bookingUserIds = Set(bookingsSnapshot.documents.compactMap { $0.data()["userId"] as? String })
-            
-            // 2. Get guest list requests for this venue
-            let guestListSnapshot = try await db.collection("guestListRequests")
-                .whereField("venueId", isEqualTo: venueId)
-                .whereField("date", isGreaterThan: Date())
-                .getDocuments()
-            
-            let guestListUserIds = Set(guestListSnapshot.documents.compactMap { $0.data()["userId"] as? String })
-            
-            // Combine all user IDs
-            let allUserIds = bookingUserIds.union(guestListUserIds)
-            
-            // Filter for friends
-            let friendsGoingIds = allUserIds.intersection(currentUserFollowing)
-            
-            // Fetch user details for these friends
-            var friends: [User] = []
-            for userId in friendsGoingIds {
-                if let user = try await FirestoreManager.shared.fetchUser(userId: userId) {
-                    // Check privacy
-                    if !user.isPrivate {
-                        friends.append(user)
-                    }
-                }
-            }
-            
-            await MainActor.run {
-                self.friendsAtVenues[venueId] = friends
-            }
-            
-        } catch {
-            print("Error fetching friends going: \(error)")
-        }
-    }
-    // MARK: - Friend Requests
-    
-    func sendFriendRequest(currentUserId: String, targetUser: User) async throws {
-        if targetUser.isPrivate {
-            let request = FriendRequest(
-                fromUserId: currentUserId,
-                toUserId: targetUser.id,
-                status: .pending,
-                createdAt: Date()
-            )
-            try await db.collection("friend_requests").addDocument(from: request)
-        } else {
-            try await followUser(currentUserId: currentUserId, targetUserId: targetUser.id)
-        }
+        // Placeholder: no-op; in production, query attendance for following users.
+        friendsByVenue[venueId] = []
     }
     
-    func fetchPendingRequests(for userId: String) async throws -> [FriendRequest] {
-        let snapshot = try await db.collection("friend_requests")
-            .whereField("toUserId", isEqualTo: userId)
-            .whereField("status", isEqualTo: RequestStatus.pending.rawValue)
-            .getDocuments()
-        
-        return try snapshot.documents.compactMap { try $0.data(as: FriendRequest.self) }
+    func getFriendsAt(venueId: String) -> [User] {
+        friendsByVenue[venueId] ?? []
     }
-    
-    func acceptRequest(_ request: FriendRequest) async throws {
-        // 1. Perform the follow (bi-directional or uni-directional depending on app logic, assuming uni-directional follow here but approved)
-        try await followUser(currentUserId: request.fromUserId, targetUserId: request.toUserId)
-        
-        // 2. Update request status
-        if let id = request.id {
-            try await db.collection("friend_requests").document(id).updateData(["status": RequestStatus.accepted.rawValue])
-        }
-    }
-    
-    func declineRequest(_ request: FriendRequest) async throws {
-        if let id = request.id {
-            try await db.collection("friend_requests").document(id).updateData(["status": RequestStatus.declined.rawValue])
-        }
-    }
-    
-    // MARK: - Activity Feed
-    
-    func logActivity(userId: String, type: ActivityType, title: String, subtitle: String, relatedId: String?) {
-        let activity = ActivityItem(
-            userId: userId,
-            type: type,
-            title: title,
-            subtitle: subtitle,
-            relatedId: relatedId,
-            timestamp: Date()
-        )
-        try? db.collection("activities").addDocument(from: activity)
-    }
-    
-    func fetchActivityFeed(followingUserIds: [String]) async throws -> [ActivityItem] {
-        guard !followingUserIds.isEmpty else { return [] }
-        
-        // Firestore 'in' query is limited to 10 items. For real apps, we'd use a different approach (fan-out or multiple queries).
-        // For now, we'll just fetch recent activities and filter in memory or limit to first 10 friends.
-        
-        let snapshot = try await db.collection("activities")
-            .whereField("userId", in: Array(followingUserIds.prefix(10)))
-            .order(by: "timestamp", descending: true)
-            .limit(to: 20)
-            .getDocuments()
-            
-        return try snapshot.documents.compactMap { try $0.data(as: ActivityItem.self) }
-    }
-}
-
-// MARK: - Models
-
-struct FriendRequest: Identifiable, Codable {
-    @DocumentID var id: String?
-    let fromUserId: String
-    let toUserId: String
-    let status: RequestStatus
-    let createdAt: Date
-}
-
-enum RequestStatus: String, Codable {
-    case pending, accepted, declined
-}
-
-struct ActivityItem: Identifiable, Codable {
-    @DocumentID var id: String?
-    let userId: String
-    let type: ActivityType
-    let title: String
-    let subtitle: String
-    let relatedId: String? // e.g., venueId
-    let timestamp: Date
-}
-
-enum ActivityType: String, Codable {
-    case booking
-    case guestList
-    case review
-    case follow
 }

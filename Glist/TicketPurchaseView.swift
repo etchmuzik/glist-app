@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import StripePaymentSheet
 
 struct TicketPurchaseView: View {
     let venue: Venue
@@ -18,6 +19,7 @@ struct TicketPurchaseView: View {
     @State private var errorMessage: String?
     @State private var transactionId: String?
     @State private var pkPassData: Data?
+    @State private var showPaymentSheet = false
     
     var totalAmount: Double { ticketType.price * Double(quantity) }
     
@@ -98,9 +100,17 @@ struct TicketPurchaseView: View {
                     
                     Spacer()
                     
+                    // Policies
+                    let rules = BookingRulesProvider.forVenue(venue)
+                    PolicyDisclosureRow(
+                        rules: rules,
+                        contextText: "By paying, you agree to: ID • Dress Code • Entry Policy"
+                    )
+                    .padding(.horizontal, 20)
+                    
                     // Payment Button
                     Button {
-                        processPayment()
+                        startCheckout()
                     } label: {
                         HStack {
                             if isProcessing {
@@ -125,8 +135,20 @@ struct TicketPurchaseView: View {
                 }
             }
         }
+
         .navigationTitle("Checkout")
         .navigationBarTitleDisplayMode(.inline)
+        .paymentSheet(isPresented: $showPaymentSheet, paymentSheet: paymentManager.paymentSheet!, onCompletion: paymentManager.onPaymentCompletion)
+        .onChange(of: paymentManager.status) { _, newStatus in
+            if case .ready = newStatus {
+                showPaymentSheet = true
+            } else if case .success(let txnId) = newStatus {
+                createTickets(transactionId: txnId)
+            } else if case .failed(let error) = newStatus {
+                errorMessage = error
+                isProcessing = false
+            }
+        }
         .alert("Payment Failed", isPresented: Binding<Bool>(
             get: { errorMessage != nil },
             set: { _ in errorMessage = nil }
@@ -137,24 +159,34 @@ struct TicketPurchaseView: View {
         }
     }
     
-    private func processPayment() {
+    private func startCheckout() {
         isProcessing = true
         errorMessage = nil
         
         Task {
             do {
-                guard let userId = authManager.user?.id else {
-                    throw PaymentError.invalidAmount
-                }
-                
-                // Process payment first
-                let txnId = try await paymentManager.processPayment(
+                try await paymentManager.preparePaymentSheet(
+                    venueId: venue.id.uuidString,
+                    tableId: nil,
                     amount: totalAmount,
-                    method: .applePay,
-                    bookingId: UUID().uuidString
+                    currency: "aed",
+                    deposit: false
                 )
+            } catch {
+                // Error handled in PaymentManager status observation
+                await MainActor.run {
+                    isProcessing = false
+                }
+            }
+        }
+    }
+    
+    private func createTickets(transactionId: String) {
+        Task {
+            do {
+                guard let userId = authManager.user?.id else { return }
                 
-                // If payment succeeds, create tickets
+                // Create tickets
                 let createdTickets = try await ticketManager.purchaseTicket(
                     userId: userId,
                     event: event,
@@ -169,22 +201,17 @@ struct TicketPurchaseView: View {
                 }
                 
                 await MainActor.run {
-                    transactionId = txnId
-                    pkPassData = passData
-                    isProcessing = false
+                    self.transactionId = transactionId
+                    self.pkPassData = passData
+                    self.isProcessing = false
                     withAnimation {
-                        showSuccess = true
+                        self.showSuccess = true
                     }
-                }
-            } catch let error as PaymentError {
-                await MainActor.run {
-                    errorMessage = error.errorDescription
-                    isProcessing = false
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Purchase failed: \(error.localizedDescription)"
-                    isProcessing = false
+                    self.errorMessage = "Ticket creation failed: \(error.localizedDescription)"
+                    self.isProcessing = false
                 }
             }
         }

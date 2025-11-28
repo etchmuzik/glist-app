@@ -68,7 +68,7 @@ extension AnalyticsManager {
             let payout = bookingId.flatMap { payoutLookup[$0] } ?? 0
             let covers = bookingId.flatMap { _ in 1 } ?? 0
             
-            if var existing = grouped[key] {
+            if let existing = grouped[key] {
                 grouped[key] = CampaignPerformanceRow(
                     id: existing.id,
                     campaign: existing.campaign,

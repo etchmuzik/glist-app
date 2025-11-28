@@ -43,6 +43,7 @@ struct RideShareManager {
     
     /// Opens the best available ride/mapping option for this venue.
     /// Priority: Careem → Ekar → Apple Maps.
+    @MainActor
     static func openBestOption(for venue: Venue) {
         guard let application = UIApplication.sharedIfAvailable else { return }
         

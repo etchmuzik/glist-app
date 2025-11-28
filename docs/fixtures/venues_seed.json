@@ -1,0 +1,59 @@
+[
+  {
+    "id": "11111111-aaaa-aaaa-aaaa-111111111111",
+    "name": "White Dubai",
+    "type": "Nightclub",
+    "location": "Meydan Racecourse",
+    "district": "Meydan",
+    "description": "Rooftop nightlife with light shows and top-tier DJs.",
+    "rating": 4.8,
+    "price": "$$$$",
+    "dressCode": "Smart Elegant",
+    "imageURL": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80",
+    "tags": ["Rooftop", "Outdoor", "Hip Hop", "Electronic"],
+    "latitude": 25.1558,
+    "longitude": 55.3003,
+    "tables": [
+      { "id": "table-white-1", "name": "Sky Booth", "capacity": 6, "minimumSpend": 6000, "isAvailable": true },
+      { "id": "table-white-2", "name": "VIP Terrace", "capacity": 8, "minimumSpend": 9000, "isAvailable": true }
+    ]
+  },
+  {
+    "id": "22222222-bbbb-bbbb-bbbb-222222222222",
+    "name": "Soho Garden",
+    "type": "Nightclub complex",
+    "location": "Meydan Racecourse",
+    "district": "Meydan",
+    "description": "Massive complex with multiple venues and international DJs.",
+    "rating": 4.7,
+    "price": "$$$",
+    "dressCode": "Smart Casual",
+    "imageURL": "https://images.unsplash.com/photo-1464375117522-1311d6a5b81f?auto=format&fit=crop&w=1600&q=80",
+    "tags": ["Complex", "House", "Techno", "Garden"],
+    "latitude": 25.1560,
+    "longitude": 55.2990,
+    "tables": [
+      { "id": "table-soho-1", "name": "Garden Deck", "capacity": 4, "minimumSpend": 3500, "isAvailable": true },
+      { "id": "table-soho-2", "name": "Main Room", "capacity": 6, "minimumSpend": 5000, "isAvailable": true }
+    ]
+  },
+  {
+    "id": "33333333-cccc-cccc-cccc-333333333333",
+    "name": "Corniche Beach F1 Club",
+    "type": "Beach Club",
+    "location": "Abu Dhabi Corniche",
+    "district": "Abu Dhabi Corniche",
+    "description": "Beachfront F1 viewing with sunset sessions and late afters.",
+    "rating": 4.6,
+    "price": "$$$",
+    "dressCode": "Beach Chic",
+    "imageURL": "https://images.unsplash.com/photo-1467348733814-f93fc480bec6?auto=format&fit=crop&w=1600&q=80",
+    "tags": ["F1", "Beach", "Sunset", "Viewing"],
+    "latitude": 24.4949,
+    "longitude": 54.3540,
+    "tables": [
+      { "id": "table-corniche-1", "name": "Waterfront Cabana", "capacity": 6, "minimumSpend": 5000, "isAvailable": true },
+      { "id": "table-corniche-2", "name": "Sunset Daybed", "capacity": 4, "minimumSpend": 3200, "isAvailable": true }
+    ]
+  }
+]

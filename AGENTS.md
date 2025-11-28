@@ -1,30 +1,33 @@
-# Repository Guidelines
+# AGENTS.md
 
-## Project Structure & Module Organization
-- App source lives in `Glist/` (SwiftUI views, managers, theming). Tests live in `GlistTests/` and `GlistUITests/`. Shared assets and entitlements are under `Glist/Assets*` and `Glist.entitlements`. Public docs (privacy/terms/support) sit in `docs/`.
-- Primary scheme/targets: `Glist` (app), `GlistTests`, `GlistUITests`.
+This file provides guidance to agents when working with code in this repository.
 
-## Build, Test, and Development Commands
-- Open and run in Xcode: `open Glist.xcodeproj`, select the **Glist** scheme, run on a simulator or device (camera features need a physical device).
-- CLI build: `xcodebuild -scheme Glist -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16' build`.
-- Unit/UI tests: `xcodebuild -scheme Glist -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16' test`.
-- Firebase deps: ensure pods/SPM packages are resolved in Xcode before first build.
+## Non-Obvious Project Patterns
 
-## Coding Style & Naming Conventions
-- Swift/SwiftUI with 4-space indentation; prefer `struct` + `View` suffix for UI components (e.g., `CheckoutView`, `TableCard`). Use `Theme.Fonts` and `Color.theme` helpers for typography/colors to keep the look consistent.
-- Favor immutable `let` where possible and `@State`/`@Binding` for UI state. Keep view bodies small; extract subviews when they exceed ~150 lines.
-- Lint/format: use Xcode’s default Swift formatting; keep trailing whitespace out and align modifiers vertically for readability.
+### Architecture Patterns
+- **Singleton Manager Pattern**: All data managers (FirestoreManager, LoyaltyManager, AuthManager, etc.) use `static let shared = ClassName()` - centralize data operations through singletons rather than dependency injection.
+- **Centralized DI in App Delegate**: All managers instantiated in `GListApp.swift` and injected as environment objects - modify dependency creation here, not in individual views.
+- **RTL Localization**: Uses `localeManager.usesRTL` for right-to-left layouts - Dubai-specific requirement affecting all UI components.
 
-## Testing Guidelines
-- Frameworks: `XCTest` (classic) and `Testing` (async-friendly). Add new tests in `GlistTests/` with filenames ending in `Tests.swift` and methods beginning with `test`.
-- Aim for meaningful assertions around QR generation (`QRCodeGenerator`), booking flows, and any validation logic in managers. Add UI tests to `GlistUITests/` for navigation and scan flows when feasible.
-- Run `xcodebuild ... test` before opening PRs; capture failing seeds or device/OS combos in the PR if applicable.
+### Data Resilience Patterns
+- **Fallback to Hardcoded Data**: `VenueManager` falls back to `VenueData.dubaiVenues` when Firestore fails - ensures app remains functional offline.
+- **Atomic Point Operations**: Loyalty points use Firestore transactions (`db.runTransaction`) for thread-safe updates - prevents race conditions in reward systems.
 
-## Commit & Pull Request Guidelines
-- Commit messages: keep a single concise summary in sentence/imperative style (recent history uses descriptive summaries like “Implement Guest List Rewards & Bans system”). Avoid multi-line bodies unless needed for context.
-- PRs should include: what changed, why, screenshots for UI changes (simulator + device if camera/QR is involved), and test results/commands run. Link issues or tickets when available.
-- Keep diffs focused; separate refactors from feature work where possible.
+### Business Logic Patterns
+- **Automatic No-Show Bans**: `incrementNoShowCount()` applies soft bans (2 no-shows, 7 days) and hard bans (4+ no-shows) automatically - compliance requirement for venue operations.
+- **Safety Event Logging**: All KYC status changes, bans, and no-shows trigger safety events in `safetyEvents` collection - mandatory audit trail.
+- **Deposit Calculation**: Table bookings require 20% deposit automatically calculated and processed before confirmation.
 
-## Security & Configuration Tips
-- Camera/QR features need a physical device and correct camera permissions; verify `NSCameraUsageDescription` remains meaningful.
-- Protect Firebase/API keys—no secrets should appear in source. Use Xcode build settings or `.xcconfig` for environment-specific values.
+### UI/UX Patterns
+- **View Size Limits**: Extract subviews when view bodies exceed ~150 lines - prevents massive, unmaintainable view structs.
+- **Custom Theme System**: Use `Theme.Fonts.title/.headline` and `Color.theme.primary` consistently - centralized theming prevents style drift.
+- **Card/Button Modifiers**: Apply `.cardStyle()` and `.buttonStyle()` extensions for consistent UI components.
+
+### Testing Priorities
+- **QR Generation Validation**: Critical tests for `QRCodeGenerator` - failures break guest list and ticket scanning.
+- **Manager Logic Tests**: Focus on booking flows, loyalty calculations, and state machines in unit tests.
+- **Camera-Dependent Features**: UI tests for scan flows require physical devices - simulator testing insufficient.
+
+### Build Requirements
+- **Physical Device for Camera**: QR scanning and guest list features require camera permissions on actual iOS devices.
+- **Specific Simulator**: Use iPhone 16 simulator for testing (`'platform=iOS Simulator,name=iPhone 16'`) - other simulators may have compatibility issues.

@@ -14,6 +14,7 @@ enum AppLanguage: String, CaseIterable {
     }
 }
 
+@MainActor
 final class LocalizationManager: ObservableObject {
     @AppStorage("app_language") private var storedLanguage = AppLanguage.english.rawValue
     @Published private(set) var language: AppLanguage = .english
@@ -34,5 +35,14 @@ final class LocalizationManager: ObservableObject {
     
     private func applySemanticDirection() {
         UIView.appearance().semanticContentAttribute = language.isRTL ? .forceRightToLeft : .forceLeftToRight
+    }
+    
+    func localized(_ key: String) -> String {
+        let selectedLanguage = language.rawValue
+        guard let path = Bundle.main.path(forResource: selectedLanguage, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return NSLocalizedString(key, comment: "")
+        }
+        return NSLocalizedString(key, tableName: nil, bundle: bundle, value: "", comment: "")
     }
 }

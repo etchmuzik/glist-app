@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import Combine
 
+@MainActor
 class SubscriptionManager: ObservableObject {
     @Published var currentTier: UserTier = .standard
     @Published var isProcessing = false
@@ -25,11 +26,7 @@ class SubscriptionManager: ObservableObject {
         do {
             // Simulate payment processing
             // In a real app, this would use StoreKit
-            let _ = try await paymentManager.processPayment(
-                amount: tier.price,
-                method: .applePay,
-                bookingId: "SUB-\(UUID().uuidString)"
-            )
+            try await Task.sleep(nanoseconds: 2 * 1_000_000_000) // Simulate 2s delay
             
             // Update user tier in Firestore (simulated)
             try await updateUserTier(tier)

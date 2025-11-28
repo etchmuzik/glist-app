@@ -1,23 +1,23 @@
 import Foundation
-import FirebaseFirestore
+import Supabase
 import Combine
 
 // MARK: - Chat Data Models
 
-enum MessageType: String, Codable {
+enum MessageType: String, Codable, Sendable {
     case text = "text"
     case image = "image"
     case bookingUpdate = "booking_update"
     case system = "system"
 }
 
-enum ChatThreadType: String, Codable {
+enum ChatThreadType: String, Codable, Sendable {
     case concierge = "concierge"  // User ↔ Venue Host
     case promoter = "promoter"   // User ↔ Promoter
     case support = "support"     // User ↔ App Support
 }
 
-struct ChatMessage: Identifiable, Codable, Hashable {
+struct ChatMessage: Identifiable, Codable, Hashable, Sendable {
     let id: String
     let threadId: String
     let senderId: String
@@ -29,6 +29,19 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     let isRead: Bool
     let metadata: [String: String]?  // For booking IDs, table names, etc.
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case threadId = "thread_id"
+        case senderId = "sender_id"
+        case senderName = "sender_name"
+        case senderRole = "sender_role"
+        case content
+        case messageType = "message_type"
+        case timestamp
+        case isRead = "is_read"
+        case metadata
+    }
+
     var isFromUser: Bool {
         senderRole == "user"
     }
@@ -38,7 +51,7 @@ struct ChatMessage: Identifiable, Codable, Hashable {
     }
 }
 
-struct ChatThread: Identifiable, Codable, Hashable {
+struct ChatThread: Identifiable, Codable, Hashable, Sendable {
     let id: String
     let participants: [String]  // User IDs
     let venueId: String?
@@ -51,6 +64,20 @@ struct ChatThread: Identifiable, Codable, Hashable {
     let unreadCount: Int
     let status: String  // "active", "closed", "archived"
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case participants
+        case venueId = "venue_id"
+        case venueName = "venue_name"
+        case threadType = "thread_type"
+        case bookingReferenceId = "booking_reference_id"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case lastMessagePreview = "last_message_preview"
+        case unreadCount = "unread_count"
+        case status
+    }
+
     var isActive: Bool {
         status == "active"
     }
@@ -58,11 +85,12 @@ struct ChatThread: Identifiable, Codable, Hashable {
 
 // MARK: - Concierge Chat Manager
 
+@MainActor
 class ConciergeChatManager: ObservableObject {
     static let shared = ConciergeChatManager()
 
-    private let db = FirestoreManager.shared.db
-    private var listeners: [ListenerRegistration] = []
+    private let client = SupabaseManager.shared.client
+    private var channels: [RealtimeChannelV2] = []
 
     // Published properties
     @Published var chatThreads: [ChatThread] = []
@@ -76,8 +104,30 @@ class ConciergeChatManager: ObservableObject {
 
     // Initialize with user context
     func initialize(for userId: String) {
+        // Avoid duplicate listeners for the same user
+        if currentUserId == userId && !channels.isEmpty { return }
+        
+        resetListeners()
         currentUserId = userId
         observeUserThreads()
+    }
+    
+    private func resetListeners() {
+        let channelsToUnsubscribe = channels
+        channels.removeAll()
+        Task {
+            for channel in channelsToUnsubscribe {
+                await channel.unsubscribe()
+            }
+        }
+    }
+
+    func tearDown() {
+        resetListeners()
+        chatThreads = []
+        messages = []
+        currentThreadId = nil
+        currentUserId = nil
     }
 
     // MARK: - Thread Management
@@ -86,27 +136,58 @@ class ConciergeChatManager: ObservableObject {
         guard let userId = currentUserId else { return }
 
         isLoading = true
-        let listener = db.collection("chatThreads")
-            .whereField("participants", arrayContains: userId)
-            .whereField("status", isEqualTo: "active")
-            .order(by: "updatedAt", descending: true)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let self = self else { return }
-
-                if let error = error {
+        
+        Task {
+            do {
+                // Initial fetch
+                let threads: [ChatThread] = try await client.database.from("chat_threads")
+                    .select()
+                    .contains("participants", value: [userId])
+                    .eq("status", value: "active")
+                    .order("updated_at", ascending: false)
+                    .execute()
+                    .value
+                
+                await MainActor.run {
+                    self.chatThreads = threads
+                    self.isLoading = false
+                }
+                
+                // Realtime subscription
+                let channel: RealtimeChannelV2 = client.channel("public:chat_threads")
+                let changeStream = channel.postgresChange(
+                    AnyAction.self,
+                    schema: "public",
+                    table: "chat_threads",
+                    filter: "participants=cs.{\(userId)}" // cs = contains
+                )
+                
+                await channel.subscribe()
+                
+                for await _ in changeStream {
+                    // Refresh threads on any change
+                    let updatedThreads: [ChatThread] = try await client.database.from("chat_threads")
+                        .select()
+                        .contains("participants", value: [userId])
+                        .eq("status", value: "active")
+                        .order("updated_at", ascending: false)
+                        .execute()
+                        .value
+                    
+                    await MainActor.run {
+                        self.chatThreads = updatedThreads
+                    }
+                }
+                
+                channels.append(channel)
+                
+            } catch {
+                await MainActor.run {
                     self.errorMessage = "Failed to load chat threads: \(error.localizedDescription)"
                     self.isLoading = false
-                    return
                 }
-
-                self.chatThreads = snapshot?.documents.compactMap { document in
-                    try? document.data(as: ChatThread.self)
-                } ?? []
-
-                self.isLoading = false
             }
-
-        listeners.append(listener)
+        }
     }
 
     func openChatThread(venueId: String, venueName: String, bookingId: String? = nil) async throws -> String {
@@ -114,7 +195,7 @@ class ConciergeChatManager: ObservableObject {
             throw NSError(domain: "ConciergeChatManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "No user logged in"])
         }
 
-        // Check if thread already exists
+        // Check if thread already exists locally
         if let existingThread = chatThreads.first(where: {
             $0.venueId == venueId && $0.bookingReferenceId == bookingId
         }) {
@@ -151,33 +232,9 @@ class ConciergeChatManager: ObservableObject {
             metadata: nil
         )
 
-        // Save to Firestore
-        try await db.collection("chatThreads").document(threadId).setData([
-            "id": threadId,
-            "participants": [userId],
-            "venueId": venueId,
-            "venueName": venueName,
-            "threadType": thread.threadType.rawValue,
-            "bookingReferenceId": bookingId as Any,
-            "createdAt": Timestamp(date: thread.createdAt),
-            "updatedAt": Timestamp(date: thread.updatedAt),
-            "lastMessagePreview": thread.lastMessagePreview,
-            "unreadCount": thread.unreadCount,
-            "status": thread.status
-        ])
-
-        // Add system message
-        try await db.collection("messages").addDocument(data: [
-            "id": systemMessage.id,
-            "threadId": threadId,
-            "senderId": systemMessage.senderId,
-            "senderName": systemMessage.senderName,
-            "senderRole": systemMessage.senderRole,
-            "content": systemMessage.content,
-            "messageType": systemMessage.messageType.rawValue,
-            "timestamp": Timestamp(date: systemMessage.timestamp),
-            "isRead": systemMessage.isRead
-        ])
+        // Save to Supabase
+        try await client.database.from("chat_threads").insert(thread).execute()
+        try await client.database.from("messages").insert(systemMessage).execute()
 
         return threadId
     }
@@ -187,23 +244,53 @@ class ConciergeChatManager: ObservableObject {
     func observeMessages(for threadId: String) {
         currentThreadId = threadId
 
-        let listener = db.collection("messages")
-            .whereField("threadId", isEqualTo: threadId)
-            .order(by: "timestamp", descending: false)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let self = self else { return }
-
-                if let error = error {
-                    self.errorMessage = "Failed to load messages: \(error.localizedDescription)"
-                    return
+        Task {
+            do {
+                // Initial fetch
+                let fetchedMessages: [ChatMessage] = try await client.database.from("messages")
+                    .select()
+                    .eq("thread_id", value: threadId)
+                    .order("timestamp", ascending: true)
+                    .execute()
+                    .value
+                
+                await MainActor.run {
+                    self.messages = fetchedMessages
                 }
-
-                self.messages = snapshot?.documents.compactMap { document in
-                    try? document.data(as: ChatMessage.self)
-                } ?? []
+                
+                // Realtime subscription
+                let channel: RealtimeChannelV2 = client.channel("public:messages:\(threadId)")
+                let changeStream = channel.postgresChange(
+                    AnyAction.self,
+                    schema: "public",
+                    table: "messages",
+                    filter: "thread_id=eq.\(threadId)"
+                )
+                
+                await channel.subscribe()
+                
+                for await _ in changeStream {
+                    // Refresh messages on any change (simple approach, can be optimized to append)
+                    let updatedMessages: [ChatMessage] = try await client.database.from("messages")
+                        .select()
+                        .eq("thread_id", value: threadId)
+                        .order("timestamp", ascending: true)
+                        .execute()
+                        .value
+                    
+                    await MainActor.run {
+                        self.messages = updatedMessages
+                    }
+                }
+                
+                channels.append(channel)
+                
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = "Failed to load messages: \(error.localizedDescription)"
+                }
             }
-
-        listeners.append(listener)
+        }
     }
 
     func sendMessage(threadId: String, content: String, messageType: MessageType = .text) async throws {
@@ -223,23 +310,13 @@ class ConciergeChatManager: ObservableObject {
         )
 
         // Save user message
-        try await db.collection("messages").addDocument(data: [
-            "id": message.id,
-            "threadId": threadId,
-            "senderId": message.senderId,
-            "senderName": message.senderName,
-            "senderRole": message.senderRole,
-            "content": message.content,
-            "messageType": message.messageType.rawValue,
-            "timestamp": Timestamp(date: message.timestamp),
-            "isRead": message.isRead
-        ])
+        try await client.database.from("messages").insert(message).execute()
 
         // Update thread's last message and timestamp
-        try await db.collection("chatThreads").document(threadId).updateData([
-            "lastMessagePreview": content,
-            "updatedAt": Timestamp(date: Date())
-        ])
+        try await client.database.from("chat_threads").update([
+            "last_message_preview": content,
+            "updated_at": Date().ISO8601Format()
+        ]).eq("id", value: threadId).execute()
 
         // Generate AI response if this is a user message
         if messageType == .text && !content.isEmpty {
@@ -254,63 +331,44 @@ class ConciergeChatManager: ObservableObject {
         // Generate AI response
         if let aiResponse = try await AIConciergeService.shared.generateAIResponse(for: userMessage, in: thread) {
             // Save AI response to database
-            try await db.collection("messages").addDocument(data: [
-                "id": aiResponse.id,
-                "threadId": threadId,
-                "senderId": aiResponse.senderId,
-                "senderName": aiResponse.senderName,
-                "senderRole": aiResponse.senderRole,
-                "content": aiResponse.content,
-                "messageType": aiResponse.messageType.rawValue,
-                "timestamp": Timestamp(date: aiResponse.timestamp),
-                "isRead": aiResponse.isRead,
-                "metadata": aiResponse.metadata as Any
-            ])
+            try await client.database.from("messages").insert(aiResponse).execute()
 
             // Update thread with AI response as last message
-            try await db.collection("chatThreads").document(threadId).updateData([
-                "lastMessagePreview": aiResponse.content,
-                "updatedAt": Timestamp(date: Date())
-            ])
+            try await client.database.from("chat_threads").update([
+                "last_message_preview": aiResponse.content,
+                "updated_at": Date().ISO8601Format()
+            ]).eq("id", value: threadId).execute()
         }
     }
-+++++++ REPLACE</parameter>
 
     func markMessagesAsRead(threadId: String) async throws {
-        let unreadMessages = messages.filter { !$0.isRead && !$0.isFromUser }
+        // Update all unread messages in this thread that are NOT from the user
+        try await client.database.from("messages")
+            .update(["is_read": true])
+            .eq("thread_id", value: threadId)
+            .eq("is_read", value: false)
+            .neq("sender_role", value: "user") // Don't mark own messages as read (logic check)
+            .execute()
 
-        for message in unreadMessages {
-            try await db.collection("messages").document(message.id).updateData([
-                "isRead": true
-            ])
-        }
-
-        // Update unread count
-        if !unreadMessages.isEmpty {
-            let currentUnreadCount = unreadMessages.count
-            try await db.collection("chatThreads").document(threadId).updateData([
-                "unreadCount": FieldValue.increment(Int64(-currentUnreadCount))
-            ])
-        }
+        // Reset unread count on thread
+        try await client.database.from("chat_threads")
+            .update(["unread_count": 0])
+            .eq("id", value: threadId)
+            .execute()
     }
 
     // MARK: - Cleanup
 
     func stopObserving() {
-        listeners.forEach { $0.remove() }
-        listeners.removeAll()
+        resetListeners()
         chatThreads.removeAll()
         messages.removeAll()
-    }
-
-    deinit {
-        stopObserving()
     }
 }
 
 // MARK: - Legacy WhatsApp Integration
 
-struct MessagingContext {
+struct MessagingContext: Sendable {
     let bookingId: UUID
     let venueName: String
     let date: Date
@@ -319,11 +377,10 @@ struct MessagingContext {
     let promoterCode: String?
     let userDisplayName: String?
 }
-+++++++ REPLACE</parameter>
 
-struct MessagingTemplate {
+struct MessagingTemplate: Sendable {
     let name: String
-    let makeBody: (MessagingContext) -> String
+    let makeBody: @Sendable (MessagingContext) -> String
 }
 
 enum LegacyConciergeChatManager {
@@ -378,4 +435,4 @@ enum LegacyConciergeChatManager {
         return formatter.string(from: date)
     }
 }
-+++++++ REPLACE</parameter>
+

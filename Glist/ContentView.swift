@@ -1,12 +1,12 @@
 import SwiftUI
+#if canImport(PassKit)
+import PassKit
+#endif
 
 struct ContentView: View {
-    @StateObject private var authManager = AuthManager()
-    @StateObject private var favoritesManager = FavoritesManager()
-    @StateObject private var guestListManager = GuestListManager()
-    @StateObject private var venueManager = VenueManager()
-    @StateObject private var loyaltyManager = LoyaltyManager.shared
-
+    @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var guestListManager: GuestListManager
+    
     // Controls whether we show the sleek onboarding screen first.
     @State private var showOnboarding: Bool = true
 
@@ -24,88 +24,38 @@ struct ContentView: View {
     }
 
     var body: some View {
-        if showOnboarding {
-            OnboardingView(isLoggedIn: $showOnboarding)
-                .preferredColorScheme(.dark)
-        } else if authManager.isAuthenticated {
-            MainTabView()
-                .preferredColorScheme(.dark)
-                .environmentObject(favoritesManager)
-                .environmentObject(guestListManager)
-                .environmentObject(authManager)
-                .environmentObject(venueManager)
-                .environmentObject(loyaltyManager)
-                .onAppear {
-                    // Start listening for guest list updates
-                    if let userId = authManager.user?.id {
-                        guestListManager.startListening(userId: userId)
-                        
-                        // Update Streak
-                        Task {
-                            try? await FirestoreManager.shared.updateStreak(userId: userId)
+        Group {
+            if showOnboarding {
+                OnboardingView(isLoggedIn: $showOnboarding)
+                    .preferredColorScheme(.dark)
+            } else if authManager.isAuthenticated {
+                MainTabView()
+                    .preferredColorScheme(.dark)
+                    .onAppear {
+                        // Start listening for guest list updates
+                        if let userId = authManager.user?.id {
+                            guestListManager.fetchRequests(userId: userId)
+                            
+                            // Update Streak
+                            Task {
+                                try? await SupabaseDataManager.shared.updateStreak(userId: userId)
+                            }
                         }
                     }
-                }
-                .onDisappear {
-                    guestListManager.stopListening()
-                }
-        } else {
-            AuthView()
-                .preferredColorScheme(.dark)
-                .environmentObject(authManager)
-        }
-    }
-}
-
-struct MainTabView: View {
-    @EnvironmentObject var authManager: AuthManager
-    
-    var body: some View {
-        TabView {
-            VenueListView()
-                .tabItem {
-                    Label("GUIDE", systemImage: "list.star")
-                }
-            
-            VenueMapView()
-                .tabItem {
-                    Label("MAP", systemImage: "map")
-                }
-            
-            SocialView()
-                .tabItem {
-                    Label("SOCIAL", systemImage: "person.2.fill")
-                }
-
-            ChatListView()
-                .tabItem {
-                    Label("MESSAGES", systemImage: "bubble.left.and.bubble.right.fill")
-                }
-
-            ProfileView()
-                .tabItem {
-                    Label("PROFILE", systemImage: "person")
-                }
-+++++++ REPLACE</parameter>
-            
-            
-            // Promoter tab - only visible for promoters
-            if authManager.userRole == .promoter {
-                PromoterDashboardView()
-                    .tabItem {
-                        Label("PROMOTER", systemImage: "chart.bar.fill")
+                    .onDisappear {
+                        guestListManager.clearRequests()
                     }
-            }
-            
-            // Admin tab - only visible for admins
-            if authManager.userRole == .admin {
-                AdminView()
-                    .tabItem {
-                        Label("ADMIN", systemImage: "shield.fill")
-                    }
+            } else {
+                AuthView()
+                    .preferredColorScheme(.dark)
             }
         }
-        .tint(.white)
+        .onChange(of: authManager.isAuthenticated) { _, newValue in
+            if !newValue {
+                guestListManager.clearRequests()
+                ConciergeChatManager.shared.tearDown()
+            }
+        }
     }
 }
 
@@ -116,19 +66,192 @@ struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var bookingManager: BookingManager
     @EnvironmentObject var loyaltyManager: LoyaltyManager
+    @EnvironmentObject var chatManager: ConciergeChatManager
     @StateObject private var ticketManager = TicketManager()
     @State private var showSeedView = false
-    @State private var showAccountSettings = false
-    @State private var showNotifications = false
-    @State private var showPrivacy = false
-    @State private var showHelp = false
-    @State private var showLogoutAlert = false
-    @State private var showKYC = false
+    @State private var showSettings = false
+    @State private var showMessages = false
     @State private var selectedRequest: GuestListRequest?
     @State private var selectedTicket: EventTicket?
     @State private var showSubscription = false
     @State private var showInvite = false
     @State private var showRewards = false
+#if canImport(PassKit)
+    @State private var showAddPass = false
+    @State private var passToAdd: PKPass?
+    @State private var showPassUnavailableAlert = false
+#endif
+    @State private var showMusicScanner = false
+    
+    private var membershipCardSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if let user = authManager.user {
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.black.opacity(0.9),
+                                    Color.theme.surface.opacity(0.9)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 24)
+                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.4), radius: 20, x: 0, y: 10)
+                    
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(user.name.uppercased())
+                                    .font(Theme.Fonts.body(size: 14))
+                                    .foregroundStyle(.white.opacity(0.8))
+                                Text(user.referralCode ?? "N/A")
+                                    .font(Theme.Fonts.display(size: 22))
+                                    .foregroundStyle(.white)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text(user.tier.rawValue.uppercased())
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.theme.accent.opacity(0.2))
+                                    .clipShape(Capsule())
+                                Text("ACTIVE")
+                                    .font(Theme.Fonts.body(size: 10))
+                                    .foregroundStyle(.white.opacity(0.7))
+                            }
+                        }
+                        
+                            HStack(alignment: .center, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Label("QR ACCESS", systemImage: "qrcode.viewfinder")
+                                        .font(Theme.Fonts.body(size: 12))
+                                        .foregroundStyle(.white.opacity(0.8))
+                                    Text("Expires \(Date().addingTimeInterval(60*60*24*180).formatted(date: .numeric, time: .omitted))")
+                                        .font(Theme.Fonts.body(size: 10))
+                                        .foregroundStyle(.white.opacity(0.6))
+                                }
+                                Spacer()
+                                walletButton
+                            }
+                        }
+                        .padding(20)
+                }
+                .frame(maxWidth: .infinity)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("PERKS & PRIVILEGES")
+                        .font(Theme.Fonts.body(size: 12))
+                        .fontWeight(.bold)
+                        .foregroundStyle(Color.theme.textSecondary)
+                    VStack(alignment: .leading, spacing: 12) {
+                        perkRow(icon: "globe.asia.australia", title: "Priority reservations", subtitle: "Exclusive slots at top venues.")
+                        perkRow(icon: "star.circle", title: "Tailored picks", subtitle: "Curated lineups and ratings.")
+                        perkRow(icon: "creditcard", title: "Perk discounts", subtitle: "Up to 20% with partners.")
+                        perkRow(icon: "gift.fill", title: "Member-only offers", subtitle: "Drops and flash perks.")
+                        perkRow(icon: "person.2.fill", title: "Meet & greet", subtitle: "Hosts and concierge access.")
+                    }
+                    .padding()
+                    .background(Color.theme.surface.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                    )
+                }
+                .padding(.horizontal, 20)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+    }
+    
+    private func perkRow(icon: String, title: String, subtitle: String) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.theme.surface.opacity(0.6))
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .foregroundStyle(.white)
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(Theme.Fonts.body(size: 14))
+                    .foregroundStyle(.white)
+                Text(subtitle)
+                    .font(Theme.Fonts.body(size: 12))
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+            Spacer()
+        }
+    }
+#if canImport(PassKit)
+    private var walletButton: some View {
+        Button {
+            if let pass = loadMembershipPass() {
+                passToAdd = pass
+                showAddPass = true
+            } else {
+                showPassUnavailableAlert = true
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "wallet.pass")
+                Text("Add to Wallet")
+            }
+            .font(Theme.Fonts.body(size: 12))
+            .foregroundStyle(.black)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.white)
+            .clipShape(Capsule())
+        }
+        .alert("Pass unavailable", isPresented: $showPassUnavailableAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Wallet pass is not packaged in this build.")
+        }
+        .sheet(isPresented: $showAddPass) {
+            if let passToAdd {
+                AddPassViewControllerWrapper(pass: passToAdd)
+            }
+        }
+    }
+    
+    private func loadMembershipPass() -> PKPass? {
+        guard let url = Bundle.main.url(forResource: "MembershipCard", withExtension: "pkpass") else { return nil }
+        do {
+            let data = try Data(contentsOf: url)
+            return try PKPass(data: data)
+        } catch {
+            return nil
+        }
+    }
+#else
+    private var walletButton: some View {
+        Button {} label: {
+            HStack(spacing: 8) {
+                Image(systemName: "wallet.pass")
+                Text("Add to Wallet")
+            }
+            .font(Theme.Fonts.body(size: 12))
+            .foregroundStyle(.black)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color.white)
+            .clipShape(Capsule())
+        }
+    }
+#endif
     
     var favoriteVenues: [Venue] {
         venueManager.venues.filter { favoritesManager.isFavorite(venueId: $0.id) }
@@ -148,14 +271,16 @@ struct ProfileView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
+                        membershipCardSection
                         headerSection
                         loyaltySection
                         guestListsSection
                         ticketsSection
+                        marketplaceSection
+                        toolsSection
                         bookingsSection
                         favoritesSection
                         inviteSection
-                        settingsSection
                         developerSection
                     }
                     .padding(.bottom, 100)
@@ -166,7 +291,7 @@ struct ProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // Action
+                        showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
                             .foregroundStyle(.white)
@@ -183,32 +308,8 @@ struct ProfileView: View {
             .sheet(isPresented: $showSeedView) {
                 DatabaseSeedView()
             }
-            .sheet(isPresented: $showAccountSettings) {
-                AccountSettingsView()
-            }
-            .sheet(isPresented: $showNotifications) {
-                NotificationsView()
-            }
-            .sheet(isPresented: $showKYC) {
-                KYCSubmissionView()
-            }
-            .sheet(isPresented: $showPrivacy) {
-                PrivacyView()
-            }
-            .sheet(isPresented: $showHelp) {
-                HelpView()
-            }
-            .alert("Logout", isPresented: $showLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Logout", role: .destructive) {
-                    do {
-                        try authManager.signOut()
-                    } catch {
-                        print("Error logging out: \(error)")
-                    }
-                }
-            } message: {
-                Text("Are you sure you want to logout?")
+            .sheet(isPresented: $showSettings) {
+                SettingsView()
             }
             .sheet(item: $selectedRequest) { request in
                 QRCodeView(
@@ -216,7 +317,8 @@ struct ProfileView: View {
                     venueName: request.venueName,
                     guestName: request.name,
                     date: request.date,
-                    ticket: nil
+                    ticket: nil,
+                    guestListRequest: request
                 )
                 .presentationDetents([.medium])
             }
@@ -226,7 +328,8 @@ struct ProfileView: View {
                     venueName: ticket.venueName,
                     guestName: authManager.user?.name ?? "Guest",
                     date: ticket.eventDate,
-                    ticket: ticket
+                    ticket: ticket,
+                    guestListRequest: nil
                 )
                 .presentationDetents([.medium])
             }
@@ -238,6 +341,12 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showRewards) {
                 RewardsView()
+            }
+            .fullScreenCover(isPresented: $showMusicScanner) {
+                MusicScannerView()
+            }
+            .sheet(isPresented: $showMessages) {
+                ChatListView()
             }
         }
     }
@@ -324,17 +433,6 @@ struct ProfileView: View {
                             Text(LocalizedStringKey("following"))
                                 .font(Theme.Fonts.body(size: 12))
                                 .foregroundStyle(.gray)
-                            }
-                            
-                            NavigationLink(destination: SocialView()) {
-                                Text(LocalizedStringKey("find_friends"))
-                                    .font(Theme.Fonts.body(size: 12))
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.black)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.white)
-                                    .clipShape(Capsule())
                             }
                         }
                         .padding(.top, 8)
@@ -447,7 +545,7 @@ struct ProfileView: View {
                         
                         // Referral Card
                         Button {
-                            UIPasteboard.general.string = user.referralCode
+                            UIPasteboard.general.string = user.referralCode ?? ""
                         } label: {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
@@ -459,7 +557,7 @@ struct ProfileView: View {
                                         .foregroundStyle(.gray)
                                 }
                                 
-                                Text(user.referralCode)
+                                Text(user.referralCode ?? "N/A")
                                     .font(Theme.Fonts.display(size: 20))
                                     .foregroundStyle(.white)
                                     .lineLimit(1)
@@ -551,6 +649,122 @@ struct ProfileView: View {
                 }
                 .padding(.horizontal, 20)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var marketplaceSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SectionHeader(title: "MARKETPLACE")
+            
+            NavigationLink(destination: ResaleMarketplaceView()) {
+                HStack(spacing: 16) {
+                    Image(systemName: "cart.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color.theme.accent)
+                        .frame(width: 40)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Resale Marketplace")
+                            .font(Theme.Fonts.body(size: 16))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        
+                        Text("Buy and sell verified tickets")
+                            .font(Theme.Fonts.body(size: 14))
+                            .foregroundStyle(.gray)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.gray)
+                }
+                .padding(16)
+                .background(Color.theme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    @ViewBuilder
+    private var toolsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            SectionHeader(title: "TOOLS")
+            
+            Button {
+                showMusicScanner = true
+            } label: {
+                HStack(spacing: 16) {
+                    Image(systemName: "shazam.logo.fill")
+                        .font(.title2)
+                        .foregroundStyle(.blue)
+                        .frame(width: 40)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Music Scanner")
+                            .font(Theme.Fonts.body(size: 16))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        
+                        Text("Identify songs playing now")
+                            .font(Theme.Fonts.body(size: 14))
+                            .foregroundStyle(.gray)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.gray)
+                }
+                .padding(16)
+                .background(Color.theme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding(.horizontal, 20)
+            
+            Button {
+                showMessages = true
+            } label: {
+                HStack(spacing: 16) {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color.theme.accent)
+                        .frame(width: 40)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Concierge Support")
+                            .font(Theme.Fonts.body(size: 16))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                        
+                        Text("Chat with our support team")
+                            .font(Theme.Fonts.body(size: 14))
+                            .foregroundStyle(.gray)
+                    }
+                    
+                    Spacer()
+                    
+                    let unreadCount = chatManager.chatThreads.reduce(0) { $0 + $1.unreadCount }
+                    if unreadCount > 0 {
+                         Text("\(unreadCount)")
+                            .font(Theme.Fonts.body(size: 12))
+                            .fontWeight(.bold)
+                            .foregroundStyle(.white)
+                            .padding(6)
+                            .background(Color.red)
+                            .clipShape(Circle())
+                    }
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(.gray)
+                }
+                .padding(16)
+                .background(Color.theme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .padding(.horizontal, 20)
         }
     }
 
@@ -662,123 +876,64 @@ struct ProfileView: View {
         .padding(.horizontal, 24)
     }
 
-    private var settingsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SectionHeader(title: "SETTINGS")
-            
-            VStack(spacing: 0) {
-                Button {
-                    showAccountSettings = true
-                } label: {
-                    SettingRow(icon: "person.circle", title: "Account Settings")
-                }
-                
-                Divider()
-                    .background(Color.theme.surface)
-                    .padding(.leading, 64)
-                
-                Button {
-                    showNotifications = true
-                } label: {
-                    SettingRow(icon: "bell", title: "Notifications")
-                }
-                
-                Divider()
-                    .background(Color.theme.surface)
-                    .padding(.leading, 64)
-                
-                Button {
-                    showKYC = true
-                } label: {
-                    SettingRow(icon: "checkmark.seal", title: "Identity Verification")
-                }
-                
-                Divider()
-                    .background(Color.theme.surface)
-                    .padding(.leading, 64)
-                
-                Button {
-                    showPrivacy = true
-                } label: {
-                    SettingRow(icon: "lock", title: "Privacy & Security")
-                }
-                
-                Divider()
-                    .background(Color.theme.surface)
-                    .padding(.leading, 64)
-                
-                Button {
-                    showHelp = true
-                } label: {
-                    SettingRow(icon: "questionmark.circle", title: "Help & Support")
-                }
-                
-                Divider()
-                    .background(Color.theme.surface)
-                    .padding(.leading, 64)
-                
-                Button {
-                    showLogoutAlert = true
-                } label: {
-                    SettingRow(icon: "arrow.right.square", title: "Logout", color: .red)
-                }
-            }
-        }
-    }
+
     
+    @ViewBuilder
     private var developerSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            SectionHeader(title: "DEVELOPER")
-            
-            VStack(spacing: 12) {
-                Text("Current Role: \(authManager.userRole.rawValue.uppercased())")
-                    .font(Theme.Fonts.body(size: 12))
-                    .foregroundStyle(.gray)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 20)
+        if authManager.userRole == .admin {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "DEVELOPER")
                 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        Button {
-                            Task { try? await authManager.updateRole(to: .user) }
-                        } label: {
-                            Text("User")
-                                .font(Theme.Fonts.body(size: 12))
-                                .fontWeight(.bold)
-                                .foregroundStyle(authManager.userRole == .user ? .black : .white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(authManager.userRole == .user ? .white : Color.theme.surface)
-                                .clipShape(Capsule())
+                VStack(spacing: 12) {
+                    Text("Current Role: \(authManager.userRole.rawValue.uppercased())")
+                        .font(Theme.Fonts.body(size: 12))
+                        .foregroundStyle(.gray)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 20)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            Button {
+                                Task { try? await authManager.updateRole(to: .user) }
+                            } label: {
+                                Text("User")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(authManager.userRole == .user ? .black : .white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(authManager.userRole == .user ? .white : Color.theme.surface)
+                                    .clipShape(Capsule())
+                            }
+                            
+                            Button {
+                                Task { try? await authManager.updateRole(to: .promoter) }
+                            } label: {
+                                Text("Promoter")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(authManager.userRole == .promoter ? .black : .white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(authManager.userRole == .promoter ? .white : Color.theme.surface)
+                                    .clipShape(Capsule())
+                            }
+                            
+                            Button {
+                                Task { try? await authManager.updateRole(to: .admin) }
+                            } label: {
+                                Text("Admin")
+                                    .font(Theme.Fonts.body(size: 12))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(authManager.userRole == .admin ? .black : .white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(authManager.userRole == .admin ? .white : Color.theme.surface)
+                                    .clipShape(Capsule())
+                            }
                         }
-                        
-                        Button {
-                            Task { try? await authManager.updateRole(to: .promoter) }
-                        } label: {
-                            Text("Promoter")
-                                .font(Theme.Fonts.body(size: 12))
-                                .fontWeight(.bold)
-                                .foregroundStyle(authManager.userRole == .promoter ? .black : .white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(authManager.userRole == .promoter ? .white : Color.theme.surface)
-                                .clipShape(Capsule())
-                        }
-                        
-                        Button {
-                            Task { try? await authManager.updateRole(to: .admin) }
-                        } label: {
-                            Text("Admin")
-                                .font(Theme.Fonts.body(size: 12))
-                                .fontWeight(.bold)
-                                .foregroundStyle(authManager.userRole == .admin ? .black : .white)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(authManager.userRole == .admin ? .white : Color.theme.surface)
-                                .clipShape(Capsule())
-                        }
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.horizontal, 20)
                 }
             }
         }
@@ -812,36 +967,7 @@ struct StatItem: View {
     }
 }
 
-struct SettingRow: View {
-    let icon: String
-    let title: String
-    var color: Color = Color.theme.textPrimary
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundStyle(color == .red ? color : Color.theme.textSecondary)
-                .frame(width: 24)
-            
-            Text(title)
-                .font(Theme.Fonts.body(size: 16))
-                .foregroundStyle(color)
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(Color.theme.textSecondary.opacity(0.5))
-        }
-        .padding(16)
-        .background(Color.theme.surface.opacity(0.3))
-        .overlay(
-            Rectangle()
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
-        )
-    }
-}
+
 
 struct GuestListTicket: View {
     let venueName: String

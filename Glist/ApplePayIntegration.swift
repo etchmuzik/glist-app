@@ -1,46 +1,28 @@
 import SwiftUI
-import PassKit
+import StripePaymentSheet
 
-// MARK: - Apple Pay Button View
-struct ApplePayButtonView: UIViewRepresentable {
-    let action: () -> Void
-
-    func makeUIView(context: Context) -> UIView {
-        let paymentButton = PKPaymentButton(paymentButtonType: .buy, paymentButtonStyle: .black)
-        paymentButton.addTarget(context.coordinator, action: #selector(Coordinator.tapped), for: .touchUpInside)
-        return paymentButton
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(action: action)
-    }
-
-    class Coordinator {
-        let action: () -> Void
-        init(action: @escaping () -> Void) {
-            self.action = action
-        }
-        @objc func tapped() {
-            action()
-        }
-    }
-}
-
-// MARK: - Apple Pay Checkout View
-struct ApplePayCheckoutView: View {
+struct TicketCheckoutView: View {
+    let venueId: String
     let venueName: String
     let amount: Double
     let description: String
     let onSuccess: () -> Void
     let onCancel: () -> Void
 
-    @State private var isProcessingPayment = false
+    @ObservedObject var paymentManager = PaymentManager.shared
+    @State private var showPaymentSheet = false
     @State private var errorMessage: String?
-    @State private var paymentController: PKPaymentAuthorizationViewController?
 
     var body: some View {
+        if let paymentSheet = paymentManager.paymentSheet {
+            content
+                .paymentSheet(isPresented: $showPaymentSheet, paymentSheet: paymentSheet, onCompletion: paymentManager.onPaymentCompletion)
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 24) {
             // Header
             VStack(spacing: 8) {
@@ -48,7 +30,7 @@ struct ApplePayCheckoutView: View {
                     .font(Theme.Fonts.display(size: 24))
                     .foregroundStyle(.white)
 
-                Text("Secure payment powered by Apple Pay")
+                Text("Secure payment via Stripe")
                     .foregroundStyle(.gray)
                     .multilineTextAlignment(.center)
             }
@@ -77,16 +59,16 @@ struct ApplePayCheckoutView: View {
             .background(Color.theme.surface.opacity(0.5))
             .clipShape(RoundedRectangle(cornerRadius: 12))
 
-            // Processing Indicator
-            if isProcessingPayment {
+            // Status / Action
+            if paymentManager.status == .preparing {
                 VStack(spacing: 12) {
                     ProgressView()
                         .tint(.white)
-                    Text("Processing your payment...")
+                    Text("Preparing payment...")
                         .foregroundStyle(.gray)
                 }
                 .frame(height: 80)
-            } else if let error = errorMessage {
+            } else if case .failed(let error) = paymentManager.status {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundStyle(.red)
@@ -94,111 +76,78 @@ struct ApplePayCheckoutView: View {
                     Text(error)
                         .foregroundStyle(.red)
                         .multilineTextAlignment(.center)
+                    Button("Try Again") {
+                        paymentManager.reset()
+                        preparePayment()
+                    }
+                    .font(Theme.Fonts.body(size: 14))
+                    .foregroundStyle(Color.theme.accent)
                 }
-                .frame(height: 80)
+                .frame(height: 100)
             } else {
-                // Apple Pay Button
-                ApplePayButtonView {
-                    startApplePayPayment()
+                // Pay Button
+                Button {
+                    if paymentManager.status == .ready {
+                        showPaymentSheet = true
+                    } else {
+                        preparePayment()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "creditcard.fill")
+                        Text("Pay Now")
+                    }
+                    .font(Theme.Fonts.body(size: 16))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 50)
+                    .background(Color.white)
+                    .clipShape(Capsule())
                 }
-                .frame(height: 48)
-                .clipShape(Capsule())
-
-                Text("Your payment information is secure and encrypted")
+                
+                Text("Supports Apple Pay and Cards")
                     .font(Theme.Fonts.body(size: 12))
                     .foregroundStyle(.gray.opacity(0.7))
             }
         }
         .padding(24)
-    }
-
-    private func createPaymentRequest() -> PKPaymentRequest {
-        let request = PKPaymentRequest()
-        request.merchantIdentifier = "merchant.com.glist" // Replace with your actual merchant ID
-        request.supportedNetworks = [.visa, .masterCard, .amex]
-        request.merchantCapabilities = .capability3DS
-        request.countryCode = "AE"
-        request.currencyCode = "AED"
-        request.requiredBillingContactFields = [.name, .emailAddress]
-
-        let paymentItem = PKPaymentSummaryItem(label: description, amount: NSDecimalNumber(value: amount))
-        let totalItem = PKPaymentSummaryItem(label: "LSTD", amount: NSDecimalNumber(value: amount))
-        request.paymentSummaryItems = [paymentItem, totalItem]
-
-        return request
-    }
-
-    private func startApplePayPayment() {
-        guard PKPaymentAuthorizationViewController.canMakePayments() else {
-            errorMessage = "Apple Pay is not available on this device. Please set up Apple Pay in your Wallet app."
-            return
+        .onAppear {
+            preparePayment()
         }
-
-        let request = createPaymentRequest()
-
-        guard let paymentVC = PKPaymentAuthorizationViewController(paymentRequest: request) else {
-            errorMessage = "Unable to initialize Apple Pay. Please try again."
-            return
-        }
-
-        paymentVC.delegate = PaymentCoordinator(onSuccess: onSuccess, onCancel: onCancel)
-        self.paymentController = paymentVC
-
-        // Present the payment controller
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first,
-           let rootVC = window.rootViewController {
-            rootVC.present(paymentVC, animated: true)
-        }
-    }
-}
-
-// MARK: - Payment Coordinator
-class PaymentCoordinator: NSObject, PKPaymentAuthorizationViewControllerDelegate {
-    let onSuccess: () -> Void
-    let onCancel: () -> Void
-
-    init(onSuccess: @escaping () -> Void, onCancel: @escaping () -> Void) {
-        self.onSuccess = onSuccess
-        self.onCancel = onCancel
-    }
-
-    func paymentAuthorizationViewController(
-        _ controller: PKPaymentAuthorizationViewController,
-        didAuthorizePayment payment: PKPayment,
-        handler completion: @escaping (PKPaymentAuthorizationResult) -> Void
-    ) {
-        // Simulate payment processing
-        // In production, you'd integrate with Stripe, Adyen, or your payment processor
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            // Simulate success 90% of the time for demo
-            if Int.random(in: 1...10) != 1 {
-                completion(PKPaymentAuthorizationResult(status: .success, errors: nil))
-                DispatchQueue.main.async {
-                    self.onSuccess()
-                }
-            } else {
-                let error = NSError(domain: "PaymentError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Payment declined"])
-                completion(PKPaymentAuthorizationResult(status: .failure, errors: [error]))
-                DispatchQueue.main.async {
-                    self.onCancel()
-                }
+        .onChange(of: paymentManager.status) { _, newStatus in
+            if case .ready = newStatus {
+                showPaymentSheet = true
+            } else if case .success = newStatus {
+                onSuccess()
             }
         }
     }
 
-    func paymentAuthorizationViewControllerDidFinish(_ controller: PKPaymentAuthorizationViewController) {
-        controller.dismiss(animated: true)
-        onCancel()
+    private func preparePayment() {
+        Task {
+            do {
+                try await paymentManager.preparePaymentSheet(
+                    venueId: venueId,
+                    tableId: nil, // Tickets don't have tableId
+                    amount: amount,
+                    currency: "aed",
+                    deposit: false // Full payment for tickets usually
+                )
+            } catch {
+                print("Failed to prepare payment: \(error)")
+            }
+        }
     }
 }
 
 // MARK: - Integration Examples
 
-extension ApplePayCheckoutView {
+extension TicketCheckoutView {
     // Example for table reservations
     static func forBooking(venue: Venue, booking: Booking, onSuccess: @escaping () -> Void, onCancel: @escaping () -> Void) -> some View {
-        ApplePayCheckoutView(
+        TicketCheckoutView(
+            venueId: venue.id.uuidString,
             venueName: venue.name,
             amount: booking.depositAmount,
             description: "Table reservation - \(booking.tableName)",
@@ -208,15 +157,35 @@ extension ApplePayCheckoutView {
     }
 
     // Example for drink orders
-    static func forDrinks(venueName: String, drinks: [(String, Double)], onSuccess: @escaping () -> Void, onCancel: @escaping () -> Void) -> some View {
+    static func forDrinks(venueId: String, venueName: String, drinks: [(String, Double)], onSuccess: @escaping () -> Void, onCancel: @escaping () -> Void) -> some View {
         let totalAmount = drinks.reduce(0) { $0 + $1.1 }
         let description = drinks.count == 1 ? drinks[0].0 : "\(drinks.count) drinks"
-        return ApplePayCheckoutView(
+        return TicketCheckoutView(
+            venueId: venueId,
             venueName: venueName,
             amount: totalAmount,
             description: description,
             onSuccess: onSuccess,
             onCancel: onCancel
         )
+    }
+}
+
+struct ApplePayButtonView: View {
+    var action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: "apple.logo")
+                Text("Pay with Apple Pay")
+            }
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundColor(.black)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(Color.white)
+            .cornerRadius(8)
+        }
     }
 }

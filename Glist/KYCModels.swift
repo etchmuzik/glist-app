@@ -1,6 +1,6 @@
 import Foundation
 
-struct KYCSubmission: Identifiable, Codable {
+struct KYCSubmission: Identifiable, Codable, Sendable {
     let id: String
     let userId: String
     let fullName: String

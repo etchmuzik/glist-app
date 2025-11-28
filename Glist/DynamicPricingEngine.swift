@@ -1,6 +1,6 @@
 import Foundation
 
-struct PricingContext {
+struct PricingContext: Sendable {
     let date: Date
     let capacity: Int
     let bookedCount: Int
@@ -16,7 +16,7 @@ struct PricingContext {
     }
 }
 
-struct PricingRule: Identifiable, Codable {
+struct PricingRule: Identifiable, Codable, Sendable {
     let id: UUID
     let name: String
     let priority: Int

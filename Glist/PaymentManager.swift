@@ -1,49 +1,96 @@
 import Foundation
 import Combine
+import StripePaymentSheet
+import Supabase
 
-enum PaymentStatus {
+enum PaymentStatus: Equatable, Sendable {
     case idle
+    case preparing
+    case ready
     case processing
     case success(transactionId: String)
     case failed(error: String)
 }
 
-enum PaymentMethod {
+enum PaymentMethod: Sendable {
     case applePay
     case creditCard
 }
 
+@MainActor
 class PaymentManager: ObservableObject {
+    static let shared = PaymentManager()
     @Published var status: PaymentStatus = .idle
+    @Published var paymentSheet: PaymentSheet?
+    @Published var paymentResult: PaymentSheetResult?
+    private var currentTransactionId: String?
+
     
-    // Mock payment processing
-    // In production, this would integrate with Stripe SDK and backend
-    func processPayment(amount: Double, method: PaymentMethod, bookingId: String) async throws -> String {
-        // Update status to processing
-        await MainActor.run {
-            status = .processing
+    // Prepare PaymentSheet by calling backend
+    public func preparePaymentSheet(venueId: String, tableId: String?, amount: Double, currency: String = "aed", deposit: Bool = true) async throws {
+        self.status = .preparing
+        
+        // 1. Call Supabase Edge Function to create PaymentIntent
+        let body: [String: GlistAnyEncodable] = [
+            "venueId": GlistAnyEncodable(venueId),
+            "tableId": GlistAnyEncodable(tableId ?? ""),
+            "amount": GlistAnyEncodable(amount),
+            "currency": GlistAnyEncodable(currency),
+            "deposit": GlistAnyEncodable(deposit)
+        ]
+        
+        do {
+            let result: PaymentIntentResponse = try await SupabaseManager.shared.client.functions.invoke("create-payment-intent", options: .init(body: body))
+            
+            self.currentTransactionId = result.transactionId
+            STPAPIClient.shared.publishableKey = result.publishableKey
+            
+            var configuration = PaymentSheet.Configuration()
+            configuration.merchantDisplayName = "Glist"
+            configuration.customer = .init(id: result.customer, ephemeralKeySecret: result.ephemeralKey)
+            configuration.allowsDelayedPaymentMethods = true
+            configuration.applePay = .init(merchantId: "merchant.com.glist", merchantCountryCode: "AE")
+            
+            self.paymentSheet = PaymentSheet(paymentIntentClientSecret: result.paymentIntent, configuration: configuration)
+            self.status = .ready
+            
+        } catch {
+            print("Error preparing payment sheet: \(error)")
+            self.status = .failed(error: error.localizedDescription)
+            throw error
         }
+    }
+
+    
+    func onPaymentCompletion(result: PaymentSheetResult) {
+        self.paymentResult = result
         
-        // Simulate network delay
-        try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-        
-        // DEMO PRODUCTION MODE: Always succeed
-        // Generate mock transaction ID
-        let transactionId = "txn_demo_\(UUID().uuidString.prefix(8))"
-        
-        await MainActor.run {
-            status = .success(transactionId: transactionId)
+        switch result {
+        case .completed:
+            self.status = .success(transactionId: self.currentTransactionId ?? "unknown")
+        case .canceled:
+            self.status = .idle
+        case .failed(let error):
+            self.status = .failed(error: error.localizedDescription)
         }
-        
-        return transactionId
     }
     
     func reset() {
         status = .idle
+        paymentSheet = nil
+        paymentResult = nil
     }
 }
 
-enum PaymentError: LocalizedError {
+private struct PaymentIntentResponse: Decodable, Sendable {
+    let paymentIntent: String
+    let publishableKey: String
+    let customer: String
+    let ephemeralKey: String
+    let transactionId: String
+}
+
+enum PaymentError: LocalizedError, Sendable {
     case paymentDeclined
     case networkError
     case invalidAmount
@@ -60,45 +107,4 @@ enum PaymentError: LocalizedError {
     }
 }
 
-// MARK: - Future Stripe Integration Template
-/*
- When ready to integrate Stripe:
- 
- 1. Add Stripe SDK via SPM:
-    https://github.com/stripe/stripe-ios
- 
- 2. Import Stripe:
-    import StripePaymentSheet
- 
- 3. Replace processPayment with:
-    func processPaymentWithStripe(amount: Double, currency: String = "USD") async throws -> String {
-        // 1. Call backend to create PaymentIntent
-        let paymentIntent = try await createPaymentIntent(amount: amount, currency: currency)
-        
-        // 2. Configure payment sheet
-        var configuration = PaymentSheet.Configuration()
-        configuration.merchantDisplayName = "LSTD"
-        configuration.applePay = .init(merchantId: "merchant.com.glist", merchantCountryCode: "AE")
-        
-        // 3. Present payment sheet
-        let paymentSheet = PaymentSheet(paymentIntentClientSecret: paymentIntent.clientSecret, configuration: configuration)
-        
-        // 4. Handle result
-        let result = await paymentSheet.present()
-        
-        switch result {
-        case .completed:
-            return paymentIntent.id
-        case .failed(let error):
-            throw PaymentError.networkError
-        case .canceled:
-            throw PaymentError.paymentDeclined
-        }
-    }
-    
-    private func createPaymentIntent(amount: Double, currency: String) async throws -> PaymentIntent {
-        // Call your backend endpoint to create PaymentIntent
-        // Backend should use Stripe secret key
-        // Example: POST /api/create-payment-intent
-    }
- */
+

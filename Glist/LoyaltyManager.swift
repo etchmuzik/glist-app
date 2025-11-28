@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class LoyaltyManager: ObservableObject {
     static let shared = LoyaltyManager()
     
@@ -17,14 +18,14 @@ class LoyaltyManager: ObservableObject {
     
     @Published var activeCampaigns: [Campaign] = []
     
-    struct Campaign: Identifiable {
+    struct Campaign: Identifiable, Sendable {
         let id = UUID()
         let title: String
         let message: String
         let type: CampaignType
     }
     
-    enum CampaignType {
+    enum CampaignType: Sendable {
         case birthday
         case anniversary
         case lapsed
@@ -79,7 +80,7 @@ class LoyaltyManager: ObservableObject {
         return campaigns
     }
     
-    struct Reward: Identifiable {
+    struct Reward: Identifiable, Sendable {
         let id = UUID()
         let title: String
         let description: String
@@ -100,7 +101,7 @@ class LoyaltyManager: ObservableObject {
         }
         
         // Deduct points
-        try await FirestoreManager.shared.addRewardPoints(userId: user.id, points: -reward.cost)
+        try await SupabaseDataManager.shared.addRewardPoints(userId: user.id, points: -reward.cost)
         
         // In a real app, we would create a "Redemption" record in Firestore
         // For now, we just deduct points

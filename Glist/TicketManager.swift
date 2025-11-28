@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import Combine
 
+@MainActor
 class TicketManager: ObservableObject {
     @Published var tickets: [EventTicket] = []
     @Published var isLoading = false
@@ -11,7 +12,7 @@ class TicketManager: ObservableObject {
         isLoading = true
         Task {
             do {
-                let tickets = try await FirestoreManager.shared.fetchUserTickets(userId: userId)
+                let tickets = try await SupabaseDataManager.shared.fetchUserTickets(userId: userId)
                 await MainActor.run {
                     self.tickets = tickets
                     self.isLoading = false
@@ -45,11 +46,11 @@ class TicketManager: ObservableObject {
                 purchaseDate: Date()
             )
             
-            try await FirestoreManager.shared.createTicket(newTicket)
+            try await SupabaseDataManager.shared.createTicket(newTicket)
             created.append(newTicket)
             
             // Award Loyalty Points
-            try await FirestoreManager.shared.addRewardPoints(userId: userId, points: LoyaltyManager.pointsPerTicket)
+            try await SupabaseDataManager.shared.addRewardPoints(userId: userId, points: LoyaltyManager.pointsPerTicket)
         }
         
         // Refresh tickets
@@ -60,5 +61,11 @@ class TicketManager: ObservableObject {
     /// Fetch a signed .pkpass for the given ticket from the backend.
     func fetchPass(for ticket: EventTicket) async throws -> Data? {
         try await PassService.shared.fetchPass(ticketId: ticket.id)
+    }
+    func purchaseResaleTicket(ticket: EventTicket, buyerId: String) async throws {
+        guard let price = ticket.resalePrice else { return }
+        try await SupabaseDataManager.shared.purchaseResaleTicket(ticketId: ticket.id.uuidString, buyerId: buyerId, price: price)
+        // Refresh tickets
+        fetchUserTickets(userId: buyerId)
     }
 }

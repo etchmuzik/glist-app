@@ -1,13 +1,15 @@
 import Foundation
 import SwiftUI
 import Combine
-import FirebaseFirestore
+import Supabase
 
+@MainActor
 class AnalyticsManager: ObservableObject {
     @Published var venueAnalytics: [VenueAnalytics] = []
     @Published var totalRevenue: Double = 0
     @Published var totalBookings: Int = 0
     @Published var totalTickets: Int = 0
+    @Published var totalGuestLists: Int = 0
     @Published var isLoading = false
     @Published var selectedPeriod: AnalyticsPeriod = .week
     
@@ -25,7 +27,7 @@ class AnalyticsManager: ObservableObject {
     @Published var alertsPendingKYC: Int = 0
     @Published var alertsNoShowEventsToday: Int = 0
     
-    private let db = FirestoreManager.shared.db
+    private let client = SupabaseManager.shared.client
     
     func fetchAnalytics(period: AnalyticsPeriod = .week) async {
         isLoading = true
@@ -33,54 +35,60 @@ class AnalyticsManager: ObservableObject {
         
         do {
             let (startDate, endDate) = getDateRange(for: period)
+            let startISO = startDate.ISO8601Format()
+            let endISO = endDate.ISO8601Format()
             
             // Fetch all venues
-            let venuesSnapshot = try await db.collection("venues").getDocuments()
+            let venues: [Venue] = try await client.database.from("venues").select().execute().value
+            
+            // Fetch all bookings in range
+            let bookings: [Booking] = try await client.database.from("bookings")
+                .select()
+                .gte("date", value: startISO)
+                .lte("date", value: endISO)
+                .execute()
+                .value
+            
+            // Fetch all tickets in range
+            let tickets: [EventTicket] = try await client.database.from("tickets")
+                .select()
+                .gte("purchase_date", value: startISO)
+                .lte("purchase_date", value: endISO)
+                .execute()
+                .value
+            
+            // Fetch all guest lists in range
+            let guestLists: [GuestListRequest] = try await client.database.from("guest_list_requests")
+                .select()
+                .gte("date", value: startISO)
+                .lte("date", value: endISO)
+                .execute()
+                .value
             
             var analytics: [VenueAnalytics] = []
             var totalRev: Double = 0
             var totalBook: Int = 0
             var totalTix: Int = 0
             
-            for venueDoc in venuesSnapshot.documents {
-                let venueId = venueDoc.documentID
-                let venueName = venueDoc.data()["name"] as? String ?? "Unknown"
+            for venue in venues {
+                let venueId = venue.id.uuidString
+                let venueName = venue.name
                 
-                // Fetch bookings for this venue
-                let bookingsSnapshot = try await db.collection("bookings")
-                    .whereField("venueId", isEqualTo: venueId)
-                    .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: startDate))
-                    .whereField("date", isLessThanOrEqualTo: Timestamp(date: endDate))
-                    .getDocuments()
+                // Filter for this venue
+                let venueBookings = bookings.filter { $0.venueId == venueId }
+                let venueTickets = tickets.filter { $0.venueId.uuidString == venueId }
+                let venueGuestLists = guestLists.filter { $0.venueId == venueId }
                 
-                let bookingRevenue = bookingsSnapshot.documents.reduce(0.0) { sum, doc in
-                    sum + (doc.data()["depositAmount"] as? Double ?? 0)
-                }
-                let bookingCount = bookingsSnapshot.documents.count
+                let bookingRevenue = venueBookings.reduce(0.0) { $0 + $1.depositAmount }
+                let bookingCount = venueBookings.count
                 
-                // Fetch tickets for this venue
-                let ticketsSnapshot = try await db.collection("tickets")
-                    .whereField("venueId", isEqualTo: venueId)
-                    .whereField("purchaseDate", isGreaterThanOrEqualTo: Timestamp(date: startDate))
-                    .whereField("purchaseDate", isLessThanOrEqualTo: Timestamp(date: endDate))
-                    .getDocuments()
+                let ticketRevenue = venueTickets.reduce(0.0) { $0 + $1.price }
+                let ticketCount = venueTickets.count
                 
-                let ticketRevenue = ticketsSnapshot.documents.reduce(0.0) { sum, doc in
-                    sum + (doc.data()["price"] as? Double ?? 0)
-                }
-                let ticketCount = ticketsSnapshot.documents.count
-                
-                // Fetch guest lists
-                let guestListsSnapshot = try await db.collection("guestListRequests")
-                    .whereField("venueId", isEqualTo: venueId)
-                    .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: startDate))
-                    .whereField("date", isLessThanOrEqualTo: Timestamp(date: endDate))
-                    .getDocuments()
-                
-                let guestListCount = guestListsSnapshot.documents.count
+                let guestListCount = venueGuestLists.count
                 
                 // Calculate peak hours
-                let peakHours = calculatePeakHours(bookings: bookingsSnapshot.documents)
+                let peakHours = calculatePeakHours(bookings: venueBookings)
                 
                 let totalVenueRevenue = bookingRevenue + ticketRevenue
                 let avgSpend = bookingCount > 0 ? totalVenueRevenue / Double(bookingCount) : 0
@@ -122,54 +130,56 @@ class AnalyticsManager: ObservableObject {
     }
     
     /// Fetches a high-level "today / tonight" overview across all venues.
-    /// This is independent of the selected analytics period and is meant
-    /// for the Tonight Overview cards in the admin dashboard.
     func fetchTodayOverview() async {
         let calendar = Calendar.current
         let now = Date()
         let startOfDay = calendar.startOfDay(for: now)
-        // End of day = start of next day
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? now
+        
+        let startISO = startOfDay.ISO8601Format()
+        let endISO = endOfDay.ISO8601Format()
         
         do {
             // Bookings today
-            let bookingsSnapshot = try await db.collection("bookings")
-                .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: startOfDay))
-                .whereField("date", isLessThan: Timestamp(date: endOfDay))
-                .getDocuments()
-            let bookingsRevenue = bookingsSnapshot.documents.reduce(0.0) { sum, doc in
-                sum + (doc.data()["depositAmount"] as? Double ?? 0)
-            }
+            let bookings: [Booking] = try await client.database.from("bookings")
+                .select()
+                .gte("date", value: startISO)
+                .lt("date", value: endISO)
+                .execute()
+                .value
+                
+            let bookingsRevenue = bookings.reduce(0.0) { $0 + $1.depositAmount }
             
             // Tickets purchased today
-            let ticketsSnapshot = try await db.collection("tickets")
-                .whereField("purchaseDate", isGreaterThanOrEqualTo: Timestamp(date: startOfDay))
-                .whereField("purchaseDate", isLessThan: Timestamp(date: endOfDay))
-                .getDocuments()
-            let ticketsRevenue = ticketsSnapshot.documents.reduce(0.0) { sum, doc in
-                sum + (doc.data()["price"] as? Double ?? 0)
-            }
+            let tickets: [EventTicket] = try await client.database.from("tickets")
+                .select()
+                .gte("purchase_date", value: startISO)
+                .lt("purchase_date", value: endISO)
+                .execute()
+                .value
+                
+            let ticketsRevenue = tickets.reduce(0.0) { $0 + $1.price }
             
             // Guest list requests for today
-            let guestListsSnapshot = try await db.collection("guestListRequests")
-                .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: startOfDay))
-                .whereField("date", isLessThan: Timestamp(date: endOfDay))
-                .getDocuments()
+            let guestLists: [GuestListRequest] = try await client.database.from("guest_list_requests")
+                .select()
+                .gte("date", value: startISO)
+                .lt("date", value: endISO)
+                .execute()
+                .value
             
             let todayRev = bookingsRevenue + ticketsRevenue
-            let todayBookCount = bookingsSnapshot.documents.count
-            let todayTicketCount = ticketsSnapshot.documents.count
-            let todayGuestListCount = guestListsSnapshot.documents.count
+            let todayBookCount = bookings.count
+            let todayTicketCount = tickets.count
+            let todayGuestListCount = guestLists.count
             
             // Payment status breakdown (Pending vs Paid)
             var paidCount = 0
             var unpaidCount = 0
-            for doc in bookingsSnapshot.documents {
-                if let status = doc.data()["status"] as? String {
-                    if status == BookingStatus.paid.rawValue { paidCount += 1 }
-                    if status == BookingStatus.pending.rawValue || status == BookingStatus.holdPending.rawValue {
-                        unpaidCount += 1
-                    }
+            for booking in bookings {
+                if booking.status == .paid { paidCount += 1 }
+                if booking.status == .pending || booking.status == .holdPending {
+                    unpaidCount += 1
                 }
             }
             
@@ -187,30 +197,35 @@ class AnalyticsManager: ObservableObject {
     }
     
     /// Lightweight alert counters for the admin dashboard.
-    /// - Pending KYC submissions
-    /// - No-show safety events recorded today
     func fetchAlerts() async {
         let calendar = Calendar.current
         let now = Date()
         let startOfDay = calendar.startOfDay(for: now)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? now
         
+        let startISO = startOfDay.ISO8601Format()
+        let endISO = endOfDay.ISO8601Format()
+        
         do {
             // Pending KYC submissions
-            let kycSnapshot = try await db.collection("kycSubmissions")
-                .whereField("status", isEqualTo: KYCStatus.pending.rawValue)
-                .getDocuments()
+            let kycCount = try await client.database.from("kyc_submissions")
+                .select(head: true, count: .exact)
+                .eq("status", value: KYCStatus.pending.rawValue)
+                .execute()
+                .count ?? 0
             
             // No-show safety events today
-            let safetySnapshot = try await db.collection("safetyEvents")
-                .whereField("type", isEqualTo: SafetyEventType.noShowIncrement.rawValue)
-                .whereField("createdAt", isGreaterThanOrEqualTo: Timestamp(date: startOfDay))
-                .whereField("createdAt", isLessThan: Timestamp(date: endOfDay))
-                .getDocuments()
+            let safetyCount = try await client.database.from("safety_events")
+                .select(head: true, count: .exact)
+                .eq("type", value: SafetyEventType.noShowIncrement.rawValue)
+                .gte("created_at", value: startISO)
+                .lt("created_at", value: endISO)
+                .execute()
+                .count ?? 0
             
             await MainActor.run {
-                self.alertsPendingKYC = kycSnapshot.documents.count
-                self.alertsNoShowEventsToday = safetySnapshot.documents.count
+                self.alertsPendingKYC = kycCount
+                self.alertsNoShowEventsToday = safetyCount
             }
         } catch {
             print("Error fetching alerts: \(error)")
@@ -237,15 +252,12 @@ class AnalyticsManager: ObservableObject {
         }
     }
     
-    private func calculatePeakHours(bookings: [QueryDocumentSnapshot]) -> [Int] {
+    private func calculatePeakHours(bookings: [Booking]) -> [Int] {
         var hourCounts: [Int: Int] = [:]
         
-        for doc in bookings {
-            if let timestamp = doc.data()["date"] as? Timestamp {
-                let date = timestamp.dateValue()
-                let hour = Calendar.current.component(.hour, from: date)
-                hourCounts[hour, default: 0] += 1
-            }
+        for booking in bookings {
+            let hour = Calendar.current.component(.hour, from: booking.date)
+            hourCounts[hour, default: 0] += 1
         }
         
         // Return top 3 hours
@@ -266,3 +278,4 @@ class AnalyticsManager: ObservableObject {
         return csv
     }
 }
+

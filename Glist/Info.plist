@@ -2,21 +2,46 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
 	<key>CFBundleDisplayName</key>
 	<string>LSTD</string>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required for QR code scanning to check in guests and verify tickets</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>NFC access is required to tap-to-check-in at venues and verify VIP tags</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Location access enables venue discovery and check-in verification nearby</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Photo library access for uploading profile pictures and venue photos</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone access is required to recognize music playing around you</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.366276176724-e093hhp7r4qq023gqvt8iek541shvhon</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.etch.glist</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>366276176724-e093hhp7r4qq023gqvt8iek541shvhon.apps.googleusercontent.com</string>
 	<key>PassServiceBaseURL</key>
 	<string>https://api.example.com/passes</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>location</string>
+		<string>fetch</string>
+	</array>
 </dict>
 </plist>

@@ -2,15 +2,15 @@
 
 Based on analysis of your Glist app codebase, here's what's missing to achieve unicorn status in Dubai's nightlife market:
 
-## 💳 **CRITICAL: Payment Integration (Currently Mock Only)**
-**Status:** ❌ Mock payments only
+## 💳 **CRITICAL: Payment Integration (Currently Mock/Partial)**
+**Status:** ⚠️ Partial (BNPL/Apple Pay stubs, 20% deposits calculated)
 **Impact:** Can't generate revenue
 **Priority:** 🔥 IMMEDIATE
 
 **Missing:**
-- Real Stripe/Dubai-local payment processors integration
-- Apple Pay + Credit Cards + Local options (Benefit Pay, Debit cards)
-- Table reservation deposits
+- Real Stripe/Dubai-local payment processors integration (Tabby/Tamara/Apple Pay wired to backends)
+- Credit Cards + Local options (Benefit Pay, Debit cards)
+- Table reservation deposits (charge flow; calculation exists)
 - Split payments for groups
 - Payment splits between venue/staff/app fees
 - Refund/cancellation handling
@@ -32,21 +32,21 @@ Based on analysis of your Glist app codebase, here's what's missing to achieve u
 - Dynamic pricing based on demand/season/time
 
 ## 🤖 **AI/ML Features**
-**Status:** ❌ None
-**Impact:** Lack of personalization
+**Status:** ⚠️ Basic heuristics only (RecommendationEngine)
+**Impact:** Limited personalization
 **Priority:** 🔴 MEDIUM-HIGH
 
 **Missing:**
-- Personal venue recommendations based on preferences/behavior
+- Personal venue recommendations based on preferences/behavior (ML-driven)
 - Wait time predictions using historical data
-- Dynamic pricing optimization
+- Dynamic pricing optimization (beyond F1 surge)
 - Fraud detection algorithms
 - Customer sentiment analysis
 - Smart table matching (group size/interests/price range)
 - Automated follow-up campaigns based on behavior
 
 ## 📱 **Dubai Market-Specific Features**
-**Status:** ❌ Limited
+**Status:** ⚠️ Limited (F1 surge + Yas/Abu Dhabi seeds)
 **Impact:** Not leveraging local market
 **Priority:** 🔴 HIGH
 
@@ -60,7 +60,7 @@ Based on analysis of your Glist app codebase, here's what's missing to achieve u
 - Integration with Dubai Police/ID verification systems
 
 ## 🎯 **Advanced Marketing Tools**
-**Status:** ❌ Basic push notifications
+**Status:** ❌ Basic push notifications; Social surface removed
 **Impact:** Limited customer acquisition
 **Priority:** 🔴 MEDIUM
 
@@ -74,7 +74,7 @@ Based on analysis of your Glist app codebase, here's what's missing to achieve u
 - Advanced segmentation (heavy users, lapsed customers, VIPs)
 
 ## 🏢 **Enterprise Venue Management**
-**Status:** ❌ Basic
+**Status:** ❌ Basic (guest lists/bookings only)
 **Impact:** Venues can't efficiently manage operations
 **Priority:** 🔴 HIGH
 
@@ -117,17 +117,17 @@ Based on analysis of your Glist app codebase, here's what's missing to achieve u
 - Parking availability & valet tracking
 
 ## 💰 **Monetization Engines**
-**Status:** ❌ Limited
+**Status:** ⚠️ Partial (commissions model + F1 surge)
 **Impact:** Not maximizing revenue streams
 **Priority:** 🔴 HIGH
 
 **Missing:**
-- Promoter commission system (affiliate program)
+- Promoter commission system (affiliate program) → payout wiring
 - Venue placement fees (featured listings)
 - Premium app features (unlimited bookings, VIP access)
 - White-label solutions for venue operators
 - Advanced booking packages & bundles
-- Dynamic surge pricing for popular times
+- Dynamic surge pricing for popular times (generalize beyond F1)
 - Luxury experiences marketplace
 
 ## 🌐 **Advanced Platform Features**
@@ -157,7 +157,7 @@ Based on analysis of your Glist app codebase, here's what's missing to achieve u
 - Tourism board partnerships (Visit Dubai)
 
 ## 🎨 **User Experience Polish**
-**Status:** ❌ Good but not premium
+**Status:** ⚠️ Improved (dark luxe card/rails/calendar); still room to elevate
 **Impact:** Competitor differentiation
 **Priority:** 🟡 MEDIUM
 

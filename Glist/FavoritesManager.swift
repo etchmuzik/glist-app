@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 
+@MainActor
 class FavoritesManager: ObservableObject {
     @Published var favoriteVenueIds: Set<UUID> = []
     

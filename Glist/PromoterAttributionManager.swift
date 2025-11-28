@@ -1,6 +1,6 @@
 import Foundation
 
-struct PromoterAttribution: Codable, Equatable {
+struct PromoterAttribution: Codable, Equatable, Sendable {
     let code: String
     let promoterId: String?
     let campaign: String?

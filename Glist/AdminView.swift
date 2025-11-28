@@ -1,51 +1,54 @@
 import SwiftUI
 import UIKit
+#if canImport(PhotosUI)
+import PhotosUI
+#endif
 
 struct AdminView: View {
     @EnvironmentObject var authManager: AuthManager
     @EnvironmentObject var venueManager: VenueManager
-    @State private var selectedTab = 0
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.theme.background.ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    // Custom Tab Selector
-                    HStack(spacing: 0) {
-                        AdminTabButton(title: LocalizedStringKey("tab_guest_lists"), isSelected: selectedTab == 0) { selectedTab = 0 }
-                        AdminTabButton(title: LocalizedStringKey("tab_venues"), isSelected: selectedTab == 1) { selectedTab = 1 }
-                        AdminTabButton(title: LocalizedStringKey("tab_analytics"), isSelected: selectedTab == 2) { selectedTab = 2 }
-                        AdminTabButton(title: LocalizedStringKey("tab_scanner"), isSelected: selectedTab == 3) { selectedTab = 3 }
-                        AdminTabButton(title: LocalizedStringKey("tab_kyc"), isSelected: selectedTab == 4) { selectedTab = 4 }
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // KYC Alert
+                        if let user = authManager.user, user.kycStatus != .verified {
+                            AdminKYCAlert(status: user.kycStatus)
+                                .padding(.horizontal, 20)
+                        }
+                        
+                        // Management Section
+                        AdminSection(title: "MANAGEMENT") {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                                AdminModuleCard(title: "Users", icon: "person.2.fill", color: .blue, destination: UserManagementView())
+                                AdminModuleCard(title: "Venues", icon: "building.2.fill", color: .purple, destination: VenueManagementView())
+                                AdminModuleCard(title: "KYC Reviews", icon: "checkmark.seal.fill", color: .orange, destination: KYCReviewView())
+                            }
+                        }
+                        
+                        // Operations Section
+                        AdminSection(title: "OPERATIONS") {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                                AdminModuleCard(title: "Guest Lists", icon: "list.clipboard.fill", color: .green, destination: GuestListManagementView())
+                                AdminModuleCard(title: "Bookings", icon: "calendar.badge.clock", color: .pink, destination: BookingManagementView())
+                                AdminModuleCard(title: "Tickets", icon: "ticket.fill", color: .yellow, destination: TicketManagementView())
+                                AdminModuleCard(title: "Scanner", icon: "qrcode.viewfinder", color: .gray, destination: StaffScannerWrapperView())
+                            }
+                        }
+                        
+                        // Finance Section
+                        AdminSection(title: "FINANCE") {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                                AdminModuleCard(title: "Analytics", icon: "chart.xyaxis.line", color: .cyan, destination: AnalyticsView())
+                                AdminModuleCard(title: "Payouts", icon: "creditcard.fill", color: .mint, destination: PayoutManagementView())
+                            }
+                        }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    
-                    if let user = authManager.user, user.kycStatus != .verified {
-                        AdminKYCAlert(status: user.kycStatus)
-                            .padding(.horizontal, 20)
-                    }
-                    
-                    // Content
-                    TabView(selection: $selectedTab) {
-                        GuestListManagementView()
-                            .tag(0)
-                        
-                        VenueManagementView()
-                            .tag(1)
-                        
-                        AnalyticsView()
-                            .tag(2)
-                        
-                        StaffScannerWrapperView()
-                            .tag(3)
-                        
-                        KYCReviewView()
-                            .tag(4)
-                    }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .padding(.vertical, 20)
                 }
             }
             .navigationTitle("ADMIN PANEL")
@@ -62,20 +65,55 @@ struct AdminView: View {
     }
 }
 
-struct AdminTabButton: View {
-    let title: LocalizedStringKey
-    let isSelected: Bool
-    let action: () -> Void
+struct AdminSection<Content: View>: View {
+    let title: String
+    let content: Content
+    
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
     
     var body: some View {
-        Button(action: action) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(Theme.Fonts.body(size: 12))
-                .fontWeight(isSelected ? .bold : .regular)
-                .foregroundStyle(isSelected ? .white : .gray)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(isSelected ? Color.theme.surface : Color.clear)
+                .fontWeight(.bold)
+                .foregroundStyle(.gray)
+                .padding(.horizontal, 20)
+            
+            content
+                .padding(.horizontal, 20)
+        }
+    }
+}
+
+struct AdminModuleCard<Destination: View>: View {
+    let title: String
+    let icon: String
+    let color: Color
+    let destination: Destination
+    
+    var body: some View {
+        NavigationLink(destination: destination) {
+            VStack(alignment: .leading, spacing: 12) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundStyle(color)
+                    .padding(10)
+                    .background(color.opacity(0.1))
+                    .clipShape(Circle())
+                
+                Text(title)
+                    .font(Theme.Fonts.body(size: 14))
+                    .fontWeight(.bold)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(Color.theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
@@ -115,10 +153,10 @@ struct KYCReviewView: View {
             // Filter Pills
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    KYCFilterChip(title: "All", isSelected: filter == nil) { filter = nil; Task { await load() } }
-                    KYCFilterChip(title: "Pending", isSelected: filter == .pending) { filter = .pending; Task { await load() } }
-                    KYCFilterChip(title: "Verified", isSelected: filter == .verified) { filter = .verified; Task { await load() } }
-                    KYCFilterChip(title: "Failed", isSelected: filter == .failed) { filter = .failed; Task { await load() } }
+                    FilterChip(title: "All", isSelected: filter == nil) { filter = nil; Task { await load() } }
+                    FilterChip(title: "Pending", isSelected: filter == .pending) { filter = .pending; Task { await load() } }
+                    FilterChip(title: "Verified", isSelected: filter == .verified) { filter = .verified; Task { await load() } }
+                    FilterChip(title: "Failed", isSelected: filter == .failed) { filter = .failed; Task { await load() } }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
@@ -159,7 +197,7 @@ struct KYCReviewView: View {
     private func load() async {
         isLoading = true
         do {
-            submissions = try await FirestoreManager.shared.fetchKYCSubmissions(status: filter)
+            submissions = try await SupabaseDataManager.shared.fetchKYCSubmissions(status: filter)
         } catch {
             print("Failed to load KYC submissions: \(error)")
         }
@@ -169,7 +207,7 @@ struct KYCReviewView: View {
     private func update(submission: KYCSubmission, to status: KYCStatus) async {
         isLoading = true
         do {
-            try await FirestoreManager.shared.updateKYCSubmissionStatus(
+            try await SupabaseDataManager.shared.updateKYCSubmissionStatus(
                 submissionId: submission.id,
                 userId: submission.userId,
                 status: status,
@@ -184,24 +222,7 @@ struct KYCReviewView: View {
     }
 }
 
-struct KYCFilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(Theme.Fonts.body(size: 12))
-                .fontWeight(.bold)
-                .foregroundStyle(isSelected ? .black : .white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color.white : Color.theme.surface.opacity(0.5))
-                .clipShape(Capsule())
-        }
-    }
-}
+
 
 struct KYCSubmissionCard: View {
     let submission: KYCSubmission
@@ -408,7 +429,7 @@ struct GuestListManagementView: View {
         isLoading = true
         Task {
             do {
-                allRequests = try await FirestoreManager.shared.fetchAllGuestListRequests()
+                allRequests = try await SupabaseDataManager.shared.fetchAllGuestListRequests()
                 isLoading = false
             } catch {
                 print("Error loading requests: \(error)")
@@ -538,7 +559,7 @@ struct AdminGuestListCard: View {
         isUpdating = true
         Task {
             do {
-                try await FirestoreManager.shared.updateGuestListStatus(
+                try await SupabaseDataManager.shared.updateGuestListStatus(
                     requestId: request.id.uuidString,
                     status: status
                 )
@@ -558,12 +579,12 @@ struct AdminGuestListCard: View {
         Task {
             do {
                 // Update status
-                try await FirestoreManager.shared.updateGuestListStatus(
+                try await SupabaseDataManager.shared.updateGuestListStatus(
                     requestId: request.id.uuidString,
                     status: "No Show"
                 )
                 // Increment no-show count
-                try await FirestoreManager.shared.incrementNoShowCount(userId: request.userId)
+                try await SupabaseDataManager.shared.incrementNoShowCount(userId: request.userId)
                 
                 await MainActor.run {
                     isUpdating = false
@@ -598,26 +619,49 @@ struct DetailItem: View {
 struct VenueManagementView: View {
     @EnvironmentObject var venueManager: VenueManager
     @State private var showAddVenue = false
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         VStack(spacing: 0) {
             // Add Button
-            Button {
-                showAddVenue = true
-            } label: {
-                HStack {
-                    Image(systemName: "plus.circle.fill")
-                    Text(LocalizedStringKey("add_new_venue"))
-                        .font(Theme.Fonts.body(size: 14))
-                        .fontWeight(.bold)
+            HStack(spacing: 16) {
+                Button {
+                    showAddVenue = true
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text(LocalizedStringKey("add_new_venue"))
+                            .font(Theme.Fonts.body(size: 14))
+                            .fontWeight(.bold)
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                
+                Button {
+                    showDeleteConfirmation = true
+                } label: {
+                    Image(systemName: "trash.fill")
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .background(.red)
+                        .clipShape(Circle())
+                }
             }
             .padding(20)
+            .alert("Delete All Venues?", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete All", role: .destructive) {
+                    Task {
+                        try? await venueManager.deleteAllVenues()
+                    }
+                }
+            } message: {
+                Text("This action cannot be undone. All venues will be permanently deleted.")
+            }
             
             // Venue List
             ScrollView {
@@ -638,54 +682,91 @@ struct VenueManagementView: View {
 
 struct AdminVenueCard: View {
     let venue: Venue
+    @EnvironmentObject var venueManager: VenueManager
+    @State private var isFeatured: Bool = false
+    @State private var featureEndDate: Date = Date().addingTimeInterval(7 * 86400)
+    @State private var featureAmount: String = ""
+    @State private var showUpdated = false
+    @State private var isEditing = false
     
     var body: some View {
-        HStack(spacing: 16) {
-            Rectangle()
-                .fill(Color.theme.surface)
-                .frame(width: 80, height: 80)
-                .overlay {
-                    Image(systemName: "photo")
-                        .foregroundStyle(.gray)
-                }
-            
-            VStack(alignment: .leading, spacing: 6) {
-                Text(venue.name.uppercased())
-                    .font(Theme.Fonts.display(size: 16))
-                    .foregroundStyle(.white)
-                
-                Text(venue.type.uppercased())
-                    .font(Theme.Fonts.body(size: 12))
-                    .foregroundStyle(Color.theme.accent)
-                
-                HStack(spacing: 12) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "star.fill")
-                            .font(.caption2)
-                            .foregroundStyle(.yellow)
-                        Text(String(format: "%.1f", venue.rating))
-                            .font(Theme.Fonts.body(size: 12))
+        Button {
+            isEditing = true
+        } label: {
+            HStack(spacing: 16) {
+                Rectangle()
+                    .fill(Color.theme.surface)
+                    .frame(width: 80, height: 80)
+                    .overlay {
+                        Image(systemName: "photo")
                             .foregroundStyle(.gray)
                     }
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(venue.name.uppercased())
+                        .font(Theme.Fonts.display(size: 16))
+                        .foregroundStyle(.white)
                     
-                    Text(venue.price)
+                    Text(venue.type.uppercased())
                         .font(Theme.Fonts.body(size: 12))
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.theme.accent)
+                    
+                    HStack(spacing: 12) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundStyle(.yellow)
+                            Text(String(format: "%.1f", venue.rating))
+                                .font(Theme.Fonts.body(size: 12))
+                                .foregroundStyle(.gray)
+                        }
+                        
+                        Text(venue.price)
+                            .font(Theme.Fonts.body(size: 12))
+                            .foregroundStyle(.gray)
+                        
+                        if venue.isFeatured {
+                            Text("FEATURED")
+                                .font(Theme.Fonts.body(size: 10))
+                                .foregroundStyle(.black)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.theme.accent)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.gray)
+            }
+            .padding(12)
+            .background(Color.theme.surface.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+        }
+        .sheet(isPresented: $isEditing) {
+            VenueEditorView(venue: venue) { updated in
+                Task {
+                    try? await SupabaseDataManager.shared.updateVenue(venue.id.uuidString, venue: updated)
+                    // venueManager.fetchVenues() - handled by real-time listener
+                    showUpdated = true
                 }
             }
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .foregroundStyle(.gray)
         }
-        .padding(12)
-        .background(Color.theme.surface.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-        )
+        .onAppear {
+            isFeatured = venue.isFeatured
+            featureEndDate = venue.featureEndDate ?? Date().addingTimeInterval(7 * 86400)
+            featureAmount = venue.featurePurchaseAmount != nil ? "\(venue.featurePurchaseAmount!)" : ""
+        }
+        .alert("Updated", isPresented: $showUpdated) {
+            Button("OK", role: .cancel) { }
+        }
     }
 }
 
@@ -693,10 +774,19 @@ struct AddVenueView: View {
     @Environment(\.dismiss) var dismiss
     @State private var name = ""
     @State private var type = "Nightclub"
+    @State private var district: DubaiDistrict = .unknown
     @State private var location = ""
     @State private var description = ""
     @State private var price = "$$$"
     @State private var dressCode = "Smart Casual"
+    @State private var imageURL: String?
+    
+#if canImport(PhotosUI)
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var previewImage: Image?
+    @State private var isUploading = false
+    @State private var uploadError: String?
+#endif
     
     let types = ["Nightclub", "Beach Club", "Lounge", "Rooftop Bar"]
     let prices = ["$", "$$", "$$$", "$$$$"]
@@ -714,7 +804,12 @@ struct AddVenueView: View {
                                 Text(type).tag(type)
                             }
                         }
-                        TextField("Location", text: $location)
+                        Picker("District", selection: $district) {
+                            ForEach(DubaiDistrict.allCases, id: \.self) { district in
+                                Text(district.rawValue).tag(district)
+                            }
+                        }
+                        TextField("Address / Location", text: $location)
                     }
                     
                     Section("DETAILS") {
@@ -726,6 +821,57 @@ struct AddVenueView: View {
                             }
                         }
                         TextField("Dress Code", text: $dressCode)
+                    }
+                    
+                    Section("IMAGES") {
+#if canImport(PhotosUI)
+                        if let previewImage {
+                            previewImage
+                                .resizable()
+                                .scaledToFill()
+                                .frame(height: 140)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        
+                        if isUploading {
+                            ProgressView("Uploading...")
+                                .tint(.white)
+                        }
+                        
+                        if let uploadError {
+                            Text(uploadError)
+                                .font(Theme.Fonts.body(size: 12))
+                                .foregroundStyle(.red)
+                        }
+                        
+                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                            HStack {
+                                Image(systemName: "photo")
+                                Text("Select Hero Image")
+                            }
+                        }
+                        .onChange(of: selectedPhoto) { _, newValue in
+                            Task {
+                                if let data = try? await newValue?.loadTransferable(type: Data.self),
+                                   let uiImage = UIImage(data: data) {
+                                    previewImage = Image(uiImage: uiImage)
+                                    uploadError = nil
+                                    
+                                    isUploading = true
+                                    if let url = await uploadVenueImage(data: data) {
+                                        imageURL = url.absoluteString
+                                    } else {
+                                        uploadError = "Upload failed."
+                                    }
+                                    isUploading = false
+                                }
+                            }
+                        }
+#endif
+                        TextField("Image URL", text: Binding(
+                            get: { imageURL ?? "" },
+                            set: { imageURL = $0.isEmpty ? nil : $0 }
+                        ))
                     }
                 }
                 .scrollContentBackground(.hidden)
@@ -750,9 +896,56 @@ struct AddVenueView: View {
     }
     
     private func saveVenue() {
-        // TODO: Implement save
-        dismiss()
+        let newVenue = Venue(
+            name: name,
+            type: type,
+            location: location,
+            district: district,
+            description: description,
+            rating: 0.0,
+            price: price,
+            dressCode: dressCode,
+            imageName: "",
+            imageURL: imageURL,
+            tags: [],
+            latitude: 25.2048,
+            longitude: 55.2708,
+            events: [],
+            isVerified: false,
+            minimumAge: 21,
+            safetyMessage: nil,
+            weeklySchedule: [:],
+            isFeatured: false,
+            featureEndDate: nil,
+            featurePurchaseAmount: nil
+        )
+        
+        Task {
+            do {
+                try await SupabaseDataManager.shared.createVenue(newVenue)
+                await MainActor.run {
+                    dismiss()
+                }
+            } catch {
+                print("Error saving venue: \(error)")
+            }
+        }
     }
+    
+#if canImport(PhotosUI)
+    private func uploadVenueImage(data: Data) async -> URL? {
+        let filename = "\(UUID().uuidString)-\(Int(Date().timeIntervalSince1970)).jpg"
+        let path = "venue-images/\(filename)"
+        
+        do {
+            let url = try await SupabaseManager.shared.uploadImage(data: data, bucket: "venue-images", path: path)
+            return url
+        } catch {
+            print("Upload error: \(error)")
+            return nil
+        }
+    }
+#endif
 }
 
 // MARK: - Analytics
@@ -989,66 +1182,7 @@ struct StatCard: View {
 
 // MARK: - Scanner
 
-struct StaffScannerWrapperView: View {
-    @EnvironmentObject var venueManager: VenueManager
-    @StateObject private var staffManager = StaffModeManager()
-    @State private var selectedVenueId: String?
-    @State private var entranceId: String = "Main Entrance"
-    @State private var syncMessage: String?
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Picker("Venue", selection: Binding(
-                    get: { selectedVenueId ?? venueManager.venues.first?.id.uuidString ?? "" },
-                    set: { selectedVenueId = $0 }
-                )) {
-                    ForEach(venueManager.venues, id: \.id) { venue in
-                        Text(venue.name).tag(venue.id.uuidString)
-                    }
-                }
-                .pickerStyle(MenuPickerStyle())
-                
-                TextField("Entrance", text: $entranceId)
-                    .textInputAutocapitalization(.words)
-                    .padding(8)
-                    .background(Color.theme.surface.opacity(0.2))
-                    .cornerRadius(8)
-            }
-            .padding(.horizontal)
-            
-            if let venueId = selectedVenueId ?? venueManager.venues.first?.id.uuidString {
-                StaffCheckInView(
-                    manager: staffManager,
-                    venueId: venueId,
-                    entranceId: entranceId,
-                    syncHandler: { events in
-                        // Stubbed backend sync: pretend all processed
-                        await MainActor.run {
-                            syncMessage = "Synced \(events.count) scans"
-                        }
-                        return events.map(\.id)
-                    }
-                )
-            } else {
-                Text("No venues available")
-                    .foregroundColor(.gray)
-            }
-            
-            if let syncMessage {
-                Text(syncMessage)
-                    .font(Theme.Fonts.body(size: 12))
-                    .foregroundColor(Color.theme.textSecondary)
-                    .padding(.bottom)
-            }
-        }
-        .onAppear {
-            if selectedVenueId == nil {
-                selectedVenueId = venueManager.venues.first?.id.uuidString
-            }
-        }
-    }
-}
+
 
 #Preview {
     AdminView()

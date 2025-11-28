@@ -1,20 +1,20 @@
 import Foundation
 import Combine
 
-struct Event: Identifiable {
+struct Event: Identifiable, Codable, Sendable {
     let id = UUID()
-    let name: String
-    let date: Date
-    let imageUrl: String? // Placeholder
-    let description: String?
+    var name: String
+    var date: Date
+    var imageUrl: String? // Placeholder
+    var description: String?
     var ticketTypes: [TicketType] = []
 }
 
-struct TicketType: Identifiable, Codable {
+struct TicketType: Identifiable, Codable, Sendable {
     var id = UUID()
-    let name: String
-    let price: Double
-    let totalQuantity: Int
+    var name: String
+    var price: Double
+    var totalQuantity: Int
     var availableQuantity: Int
-    let description: String?
+    var description: String?
 }

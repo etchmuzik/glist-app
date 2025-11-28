@@ -1,13 +1,13 @@
 import Foundation
 
-enum ScanResultStatus: String, Codable {
+enum ScanResultStatus: String, Codable, Sendable {
     case success
     case duplicate
     case invalid
     case offlineQueued
 }
 
-struct ScanEvent: Identifiable, Codable {
+struct ScanEvent: Identifiable, Codable, Sendable {
     let id: UUID
     let code: String
     let venueId: String
@@ -41,7 +41,7 @@ struct ScanEvent: Identifiable, Codable {
     }
 }
 
-struct DeviceBinding: Codable, Equatable {
+struct DeviceBinding: Codable, Equatable, Sendable {
     let deviceId: String
     let staffUserId: String
     let venueId: String

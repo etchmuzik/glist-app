@@ -1,8 +1,8 @@
 import UserNotifications
-import FirebaseMessaging
 import UIKit
 import Combine
 
+@MainActor
 class NotificationManager: NSObject, ObservableObject {
     static let shared = NotificationManager()
     
@@ -18,7 +18,6 @@ class NotificationManager: NSObject, ObservableObject {
     override init() {
         super.init()
         UNUserNotificationCenter.current().delegate = self
-        Messaging.messaging().delegate = self
     }
     
     func requestPermission() {
@@ -26,7 +25,7 @@ class NotificationManager: NSObject, ObservableObject {
         UNUserNotificationCenter.current().requestAuthorization(
             options: authOptions,
             completionHandler: { granted, error in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     self.isAuthorized = granted
                     if granted {
                         UIApplication.shared.registerForRemoteNotifications()
@@ -41,7 +40,7 @@ class NotificationManager: NSObject, ObservableObject {
     
     func getNotificationSettings() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.isAuthorized = settings.authorizationStatus == .authorized
             }
         }
@@ -50,22 +49,18 @@ class NotificationManager: NSObject, ObservableObject {
     // Store token for current user and subscribe to topics matching preferences.
     func syncFCMTokenIfNeeded(userId: String?, preferences: NotificationPreferences? = nil) async {
         guard let userId, let token = latestFCMToken else { return }
-        try? await FirestoreManager.shared.updateFCMToken(userId: userId, token: token)
+        try? await SupabaseDataManager.shared.updateFCMToken(userId: userId, token: token)
         if let preferences {
             await updateTopicSubscriptions(preferences: preferences)
         }
     }
     
     func updateTopicSubscriptions(preferences: NotificationPreferences) async {
-        for (keyPath, topic) in topicMap {
-            if preferences[keyPath: keyPath] {
-                try? await Messaging.messaging().subscribe(toTopic: topic)
-            } else {
-                try? await Messaging.messaging().unsubscribe(fromTopic: topic)
-            }
-        }
+        // Topic subscription logic removed as it depended on Firebase Messaging
+        // In a real app, you might update these preferences in your backend
+        // or use a different push provider's topic system.
+        print("Updating topic subscriptions for preferences: \(preferences)")
     }
-
     
     // MARK: - Local Notifications
     
@@ -142,11 +137,3 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     }
 }
 
-extension NotificationManager: MessagingDelegate {
-    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("Firebase registration token: \(String(describing: fcmToken))")
-        
-        guard let token = fcmToken else { return }
-        latestFCMToken = token
-    }
-}

@@ -1,6 +1,7 @@
 import Foundation
 import PassKit
 import UIKit
+import SwiftUI
 
 enum AppleWalletManager {
     static func presentPass(from data: Data, in controller: UIViewController) {
@@ -22,5 +23,18 @@ enum AppleWalletManager {
             return
         }
         controller.present(vc, animated: true)
+    }
+}
+
+struct AddPassViewControllerWrapper: UIViewControllerRepresentable {
+    let pass: PKPass
+
+    func makeUIViewController(context: Context) -> PKAddPassesViewController {
+        // Force unwrap is safe here because we are passing a valid PKPass object
+        return PKAddPassesViewController(pass: pass)!
+    }
+
+    func updateUIViewController(_ uiViewController: PKAddPassesViewController, context: Context) {
+        // No updates needed
     }
 }

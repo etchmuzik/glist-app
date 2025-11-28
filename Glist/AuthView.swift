@@ -6,9 +6,11 @@ struct AuthView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var name = ""
+    @State private var selectedRole: UserRole = .user
     @State private var referralCode = ""
     @State private var errorMessage = ""
     @State private var isLoading = false
+    @State private var showVerificationAlert = false
     
     var body: some View {
         ZStack {
@@ -87,6 +89,44 @@ struct AuthView: View {
                                     text: $name
                                 )
                                 
+                                // Role Selection
+                                HStack(spacing: 0) {
+                                    Button {
+                                        withAnimation { selectedRole = .user }
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: "person.fill")
+                                            Text("User")
+                                        }
+                                        .font(Theme.Fonts.body(size: 14))
+                                        .fontWeight(selectedRole == .user ? .bold : .regular)
+                                        .foregroundStyle(selectedRole == .user ? .white : .gray)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(selectedRole == .user ? Color.theme.accent.opacity(0.6) : Color.theme.surface.opacity(0.5))
+                                    }
+                                    
+                                    Button {
+                                        withAnimation { selectedRole = .promoter }
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: "star.fill")
+                                            Text("Promoter")
+                                        }
+                                        .font(Theme.Fonts.body(size: 14))
+                                        .fontWeight(selectedRole == .promoter ? .bold : .regular)
+                                        .foregroundStyle(selectedRole == .promoter ? .white : .gray)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(selectedRole == .promoter ? Color.theme.accent.opacity(0.6) : Color.theme.surface.opacity(0.5))
+                                    }
+                                }
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                )
+                                
                                 CustomTextField(
                                     icon: "tag",
                                     placeholder: LocalizedStringKey("referral_optional"),
@@ -123,9 +163,9 @@ struct AuthView: View {
                                     .tint(.black)
                             } else {
                                 Text(isLogin ? LocalizedStringKey("login") : LocalizedStringKey("create_account"))
-                                    .font(Theme.Fonts.body(size: 14))
-                                    .fontWeight(.bold)
-                                    .tracking(2)
+                                .font(Theme.Fonts.body(size: 14))
+                                .fontWeight(.bold)
+                                .tracking(2)
                             }
                         }
                         .foregroundStyle(.black)
@@ -138,9 +178,74 @@ struct AuthView: View {
                     .padding(.horizontal, 32)
                     .padding(.top, 20)
                     
+                    // Social Sign In
+                    VStack(spacing: 20) {
+                        HStack {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 1)
+                            Text("OR")
+                                .font(Theme.Fonts.caption())
+                                .foregroundStyle(.gray)
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 1)
+                        }
+                        
+                        HStack(spacing: 20) {
+                            Button {
+                                handleGoogleSignIn()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "g.circle.fill") // Placeholder for Google logo
+                                        .font(.title2)
+                                    Text("Google")
+                                        .font(Theme.Fonts.body(size: 14))
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundStyle(.black)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            
+                            Button {
+                                handleAppleSignIn()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "apple.logo")
+                                        .font(.title2)
+                                    Text("Apple")
+                                        .font(Theme.Fonts.body(size: 14))
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Color.black)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 32)
+                    
                     Spacer()
                 }
             }
+        }
+        .alert("Check your email", isPresented: $showVerificationAlert) {
+            Button("OK", role: .cancel) {
+                withAnimation {
+                    isLogin = true
+                }
+            }
+        } message: {
+            Text("We've sent a confirmation link to \(email). Please verify your email to log in.")
         }
     }
     
@@ -158,8 +263,35 @@ struct AuthView: View {
                         isLoading = false
                         return
                     }
-                    try await authManager.signUp(email: email, password: password, name: name, referralCode: referralCode)
+                    try await authManager.signUp(email: email, password: password, name: name, role: selectedRole, referralCode: referralCode)
+                    
+                    if !authManager.isAuthenticated {
+                        showVerificationAlert = true
+                    }
                 }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isLoading = false
+        }
+    }
+    private func handleGoogleSignIn() {
+        isLoading = true
+        Task {
+            do {
+                try await authManager.signInWithGoogle()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isLoading = false
+        }
+    }
+    
+    private func handleAppleSignIn() {
+        isLoading = true
+        Task {
+            do {
+                try await authManager.signInWithApple()
             } catch {
                 errorMessage = error.localizedDescription
             }
